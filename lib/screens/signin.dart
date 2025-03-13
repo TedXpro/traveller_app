@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:traveller_app/screens/home.dart';
 import 'package:traveller_app/screens/signup.dart';
 
 class SignInPage extends StatefulWidget {
@@ -76,7 +77,12 @@ class _SignInPageState extends State<SignInPage> {
               ),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, 50),
                 ),
@@ -85,17 +91,7 @@ class _SignInPageState extends State<SignInPage> {
               SizedBox(height: 20),
               Center(child: Text('or')),
               SizedBox(height: 10),
-              ElevatedButton.icon(
-                onPressed: () {},
-                icon: Icon(Icons.login),
-                label: Text('Sign in with Google'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  side: BorderSide(color: Colors.grey),
-                  minimumSize: Size(double.infinity, 50),
-                ),
-              ),
+              _buildGoogleSignUpButton(),
               SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -116,6 +112,27 @@ class _SignInPageState extends State<SignInPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildGoogleSignUpButton() {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+      onPressed: () {
+        // TODO: Handle Google Sign Up
+        print('Sign Up with Google');
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset('assets/google_logo.png', height: 20),
+          const SizedBox(width: 10),
+          const Text(
+            'Sign Up with Google',
+            style: TextStyle(color: Colors.black),
+          ),
+        ],
       ),
     );
   }
