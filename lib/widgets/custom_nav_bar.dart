@@ -25,14 +25,17 @@ class _CustomNavBarState extends State<CustomNavBar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:
-          _pages[_currentIndex], // Directly set the body based on currentIndex
+      body: widget.child,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
-            _currentIndex = index; // Update the index when an item is tapped
+            _currentIndex = index;
           });
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => _pages[index]),
+          );
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
