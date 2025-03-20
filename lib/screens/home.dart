@@ -1,51 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:traveller_app/screens/signin.dart';
 import 'package:traveller_app/widgets/custom_app_bar.dart';
 import 'package:traveller_app/widgets/custom_nav_bar.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final TextEditingController _fromController = TextEditingController();
-  final TextEditingController _toController = TextEditingController();
+  String userName = '';
 
-  // Sample list of cities
-  final List<String> cities = [
-    'Addis Ababa',
-    'Bahir Dar',
-    'Gondar',
-    'Dire Dawa',
-    'Mekelle',
-    'Hawassa',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _getUserName();
+  }
+
+  // Fetch user name from SharedPreferences
+  _getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName =
+          prefs.getString('userName') ??
+          'User'; // Default to 'User' if not found
+    });
+  }
+
+  // Log out and clear user data from SharedPreferences
+  _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.remove('userName'); // Remove user info from SharedPreferences
+    prefs.remove('authToken'); // Remove the token as well
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SignInPage(),
+      ), // Navigate back to sign-in page
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return CustomNavBar(
-      child: Scaffold(
-        appBar: CustomAppBar(),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWelcomeText(),
-              const SizedBox(height: 20),
-              _buildTripCard(),
-            ],
-          ),
+    return Scaffold(
+      appBar: CustomAppBar(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildWelcomeText(),
+            const SizedBox(height: 20),
+            _buildTripCard(),
+          ],
         ),
       ),
+      bottomNavigationBar: CustomNavBar(currIndex: 0),
     );
   }
 
   // Reusable welcome text widget
   Widget _buildWelcomeText() {
     return Text(
-      'Welcome, [User Name]',
+      'Welcome, $userName', // Display the user’s name
       style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
     );
   }
@@ -82,7 +103,6 @@ class _HomePageState extends State<HomePage> {
       child: GestureDetector(
         onTap: () => showSlidingPanel(context),
         child: TextField(
-          controller: _fromController,
           decoration: const InputDecoration(
             labelText: 'From',
             suffixIcon: Icon(Icons.search),
@@ -95,10 +115,7 @@ class _HomePageState extends State<HomePage> {
   // To TextField
   Widget _buildToInput() {
     return Expanded(
-      child: TextField(
-        controller: _toController,
-        decoration: const InputDecoration(labelText: 'To'),
-      ),
+      child: TextField(decoration: const InputDecoration(labelText: 'To')),
     );
   }
 
@@ -142,31 +159,14 @@ class _HomePageState extends State<HomePage> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            _buildCityList(),
           ],
         ),
       ),
     );
   }
 
-  // Reusable ListView for cities
-  Widget _buildCityList() {
-    return SizedBox(
-      height: 200,
-      child: ListView.builder(
-        itemCount: cities.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(cities[index]),
-            onTap: () {
-              setState(() {
-                _fromController.text = cities[index];
-              });
-              Navigator.pop(context);
-            },
-          );
-        },
-      ),
-    );
+  // Logout button
+  Widget _buildLogoutButton() {
+    return ElevatedButton(onPressed: _logout, child: const Text('Logout'));
   }
 }
