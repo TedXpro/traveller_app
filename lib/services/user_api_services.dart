@@ -1,54 +1,85 @@
+// lib/services/user_api_services.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:traveller_app/models/email_credential.dart';
-import 'package:jwt_decoder/jwt_decoder.dart'; // Import the JWT decoder
+import 'package:traveller_app/models/user.dart';
+import 'package:traveller_app/models/login_response.dart';
 
 class UserService {
-  final String baseUrl =
-      'http://localhost:8080/api/login/email'; // Replace with your IP
+  final String baseUrl = 'http://localhost:8080';
 
-  Future<bool> login(EmailCredential credentials) async {
+  Future<LoginResponse?> login(EmailCredential credentials) async {
     final response = await http.post(
-      Uri.parse(baseUrl),
+      Uri.parse('$baseUrl/api/login/email'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(credentials.toJson()),
     );
-
-    print(response);
-    print("**********************");
-    print(response.body);
 
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
       final token = responseData['token'];
 
       if (token != null) {
-        // Decode the JWT token
         Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
-        final firstName = decodedToken['first_name'];
         final userId = decodedToken['id'];
 
-        print("Decoded Token: $decodedToken");
+        final userData = await getUserData(userId);
 
-        if (firstName != null) {
-          // Save token and first_name in SharedPreferences
-          final prefs = await SharedPreferences.getInstance();
-          prefs.setString('authToken', token); // Save token
-          prefs.setString('userName', firstName); // Save first name
-          prefs.setString('userId', userId); //save user id
-          return true;
+        if (userData != null) {
+          // Return the User object and the token
+          return LoginResponse(user: userData, token: token);
         } else {
-          print("firstName not found in token");
-          return false; // First name not found in token
+          print("User data not found for userId: $userId");
+          return null;
         }
       } else {
-        print("token not found in response");
-        return false; // Token not found in response
+        print("Token not found in response");
+        return null;
       }
     } else {
       print("Login failed with status code: ${response.statusCode}");
-      return false; // Login failed
+      return null;
+    }
+  }
+
+  Future<User?> getUserData(userId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/user/$userId'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> userData = jsonDecode(response.body);
+      return User.fromJson(userData);
+    }
+    return null;
+  }
+
+  Future<User?> signup(User user) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(user.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        // Changed to 201 for successful creation
+        final Map<String, dynamic> userData = jsonDecode(response.body);
+        return User.fromJson(userData);
+      } else {
+        // Handle error responses from the backend
+        print("Signup failed with status code: ${response.statusCode}");
+        print(
+          "Response body: ${response.body}",
+        ); // Print the response body for debugging
+        return null;
+      }
+    } catch (e) {
+      // Handle network or other errors
+      print("Signup error: $e");
+      return null;
     }
   }
 }

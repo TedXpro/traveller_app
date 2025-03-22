@@ -16,7 +16,7 @@ class _CustomNavBarState extends State<CustomNavBar> {
 
   final List<Widget> _pages = [
     HomePage(),
-    BookPage(),
+    BookPage(travels: [],),
     // MyTripsPage(),
     // CheckInPage(),
   ];

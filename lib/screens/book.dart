@@ -1,271 +1,163 @@
 import 'package:flutter/material.dart';
-import 'package:traveller_app/services/destination_api_services.dart';
-import 'package:traveller_app/widgets/custom_app_bar.dart';
-import 'package:traveller_app/widgets/custom_nav_bar.dart';
-import 'package:traveller_app/models/destination.dart';
+import 'package:traveller_app/models/travel.dart';
+import 'package:traveller_app/models/agency.dart';
+import 'package:traveller_app/screens/travel_details.dart';
+import 'package:traveller_app/services/agency_api_services.dart';
 
 class BookPage extends StatefulWidget {
-  const BookPage({super.key});
+  final List<Travel> travels;
+
+  const BookPage({super.key, required this.travels});
 
   @override
   _BookPageState createState() => _BookPageState();
 }
 
 class _BookPageState extends State<BookPage> {
-  bool isRoundTrip = true;
-  DateTime? departureDate;
-  DateTime? returnDate;
-  String? selectedFromDestination;
-  String? selectedToDestination;
-  late Future<List<Destination>> _destinations;
-  late TextEditingController _fromController;
-  late TextEditingController _toController;
+  double _minPrice = 0;
+  double _maxPrice = double.infinity;
+  Map<String, String> agencyNames = {};
+  Map<String, Agency> _agencyCache = {}; // Cache agencies
+  final AgencyServices _agencyServices = AgencyServices();
 
   @override
   void initState() {
     super.initState();
-    _destinations = fetchDestinations(); // Fetch destinations once
-    _fromController = TextEditingController();
-    _toController = TextEditingController();
+    _fetchAgencyNames();
   }
 
-  @override
-  void dispose() {
-    _fromController.dispose();
-    _toController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _selectDate(BuildContext context, bool isDeparture) async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null) {
-      setState(() {
-        if (isDeparture) {
-          departureDate = pickedDate;
-          if (returnDate != null && returnDate!.isBefore(pickedDate)) {
-            returnDate =
-                null; // Reset return date if it's before departure date
-          }
-        } else {
-          returnDate = pickedDate;
+  Future<void> _fetchAgencyNames() async {
+    for (var travel in widget.travels) {
+      if (!agencyNames.containsKey(travel.agencyId)) {
+        if (_agencyCache.containsKey(travel.agencyId)) {
+          setState(() {
+            agencyNames[travel.agencyId] = _agencyCache[travel.agencyId]!.name;
+          });
+          continue;
         }
-      });
-    }
-  }
 
-  // Show the Modal Bottom Sheet for "From" field selection
-  void _showFromDestinationSheet(
-    BuildContext context,
-    List<Destination> destinations,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          height:
-              MediaQuery.of(context).size.height *
-              0.75, // 75% of the screen height
-          child: Column(
-            children: [
-              Text(
-                'Select From Destination',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              SizedBox(height: 10),
-              // Display destinations as a row
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3, // Display in 3 columns
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                  ),
-                  itemCount: destinations.length,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedFromDestination = destinations[index].name;
-                          _fromController.text = selectedFromDestination!;
-                        });
-                        Navigator.pop(context); // Close the bottom sheet
-                      },
-                      child: Card(
-                        child: Center(child: Text(destinations[index].name)),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+        try {
+          Agency? agency = await _agencyServices.fetchAgencyApi(travel.agencyId);
+          if (agency != null) {
+            setState(() {
+              agencyNames[travel.agencyId] = agency.name;
+              _agencyCache[travel.agencyId] = agency; // Cache agency
+            });
+          } else {
+            setState(() {
+              agencyNames[travel.agencyId] = "Unknown Agency";
+            });
+          }
+        } catch (e) {
+          print("Error fetching agency: $e");
+          setState(() {
+            agencyNames[travel.agencyId] = "Error Loading Agency";
+          });
+        }
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    List<Travel> filteredTravels = widget.travels.where((travel) {
+      return travel.price >= _minPrice && travel.price <= _maxPrice;
+    }).toList();
+
     return Scaffold(
-      appBar: CustomAppBar(),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // One-way and Round Trip Toggle
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ChoiceChip(
-                  label: Text('One Way'),
-                  selected: !isRoundTrip,
-                  onSelected: (selected) {
-                    setState(() {
-                      isRoundTrip = !selected;
-                    });
-                  },
-                ),
-                ChoiceChip(
-                  label: Text('Round Trip'),
-                  selected: isRoundTrip,
-                  onSelected: (selected) {
-                    setState(() {
-                      isRoundTrip = selected;
-                    });
-                  },
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-
-            // From Section
-            FutureBuilder<List<Destination>>(
-              future: _destinations,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator(); // Loading indicator
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else if (snapshot.hasData) {
-                  final destinations = snapshot.data!;
-
-                  return DropdownButton<String>(
-                    value: selectedFromDestination,
-                    hint: Text('Select From'),
-                    isExpanded: true, // Take up the full width
-                    icon: Icon(Icons.arrow_drop_down),
-                    items:
-                        destinations.map((Destination destination) {
-                          return DropdownMenuItem<String>(
-                            value: destination.name,
-                            child: Text(destination.name),
-                          );
-                        }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedFromDestination = newValue;
-                        _fromController.text =
-                            newValue ?? ''; // Retain selected destination
-                      });
-                    },
-                  );
-                } else {
-                  return Text('No destinations found.');
-                }
+      appBar: AppBar(
+        title: const Text('Available Trips'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () => _showFilterDialog(context),
+          ),
+        ],
+      ),
+      body: ListView.builder(
+        itemCount: filteredTravels.length,
+        itemBuilder: (context, index) {
+          final travel = filteredTravels[index];
+          return Card(
+            margin: const EdgeInsets.all(8.0),
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: ListTile(
+              leading: const Icon(Icons.directions_bus, size: 36, color: Colors.blue),
+              title: Text(
+                '${travel.startLocation} to ${travel.destination}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Agency: ${agencyNames[travel.agencyId] ?? "Loading..."}'),
+                  Text('Price: \$${travel.price}'),
+                ],
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TravelDetailsPage(travel: travel),
+                  ),
+                );
               },
             ),
+          );
+        },
+      ),
+    );
+  }
 
-            SizedBox(height: 10),
-
-            // To Section
-            FutureBuilder<List<Destination>>(
-              future: _destinations,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator(); // Loading indicator
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else if (snapshot.hasData) {
-                  final destinations = snapshot.data!;
-
-                  return Autocomplete<Destination>(
-                    optionsBuilder: (TextEditingValue textEditingValue) {
-                      if (textEditingValue.text.isEmpty) {
-                        return const Iterable<Destination>.empty();
-                      }
-                      return destinations.where((Destination destination) {
-                        return destination.name.toLowerCase().contains(
-                          textEditingValue.text.toLowerCase(),
-                        );
-                      });
-                    },
-                    displayStringForOption: (Destination option) => option.name,
-                    onSelected: (Destination selection) {
+  void _showFilterDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Filter Trips'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Price Range: \$${_minPrice.toInt()} - \$${_maxPrice.toInt()}',
+                  ),
+                  RangeSlider(
+                    values: RangeValues(_minPrice, _maxPrice),
+                    min: 0,
+                    max: widget.travels
+                        .map((e) => e.price)
+                        .reduce((a, b) => a > b ? a : b),
+                    divisions: 10,
+                    labels: RangeLabels(
+                      _minPrice.toInt().toString(),
+                      _maxPrice.toInt().toString(),
+                    ),
+                    onChanged: (RangeValues values) {
                       setState(() {
-                        selectedToDestination = selection.name;
+                        _minPrice = values.start;
+                        _maxPrice = values.end;
                       });
-                      _toController.text = selection.name; // Retain selection
                     },
-                    fieldViewBuilder: (
-                      context,
-                      controller,
-                      focusNode,
-                      onFieldSubmitted,
-                    ) {
-                      controller.text = selectedToDestination ?? '';
-                      return TextField(
-                        controller: _toController,
-                        focusNode: focusNode,
-                        decoration: InputDecoration(labelText: 'To'),
-                        onSubmitted: (String value) {
-                          onFieldSubmitted();
-                        },
-                      );
-                    },
-                  );
-                } else {
-                  return Text('No destinations found.');
-                }
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Apply'),
+              onPressed: () {
+                setState(() {});
+                Navigator.of(context).pop();
               },
-            ),
-
-            SizedBox(height: 20),
-
-            // Departure Date Picker
-            ListTile(
-              title: Text(
-                departureDate == null
-                    ? 'Select Departure Date'
-                    : 'Departure: ${departureDate!.toLocal()}'.split(' ')[0],
-              ),
-              trailing: Icon(Icons.calendar_today),
-              onTap: () => _selectDate(context, true),
-            ),
-
-            // Return Date Picker (Disabled if One-Way)
-            ListTile(
-              title: Text(
-                returnDate == null
-                    ? 'Select Return Date'
-                    : 'Return: ${returnDate!.toLocal()}'.split(' ')[0],
-              ),
-              trailing: Icon(Icons.calendar_today),
-              onTap: isRoundTrip ? () => _selectDate(context, false) : null,
-              enabled: isRoundTrip,
             ),
           ],
-        ),
-      ),
-      bottomNavigationBar: CustomNavBar(currIndex: 1),
+        );
+      },
     );
   }
 }

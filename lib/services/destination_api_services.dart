@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:traveller_app/models/destination.dart';
 
-Future<List<Destination>> fetchDestinations() async {
+Future<List<Destination>> fetchDestinationsApi() async {
   final response = await http.get(
     Uri.parse('http://localhost:8080/destination/all'),
   );

@@ -1,5 +1,13 @@
+import 'dart:io' as http;
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:traveller_app/models/email_credential.dart';
+import 'package:traveller_app/models/login_response.dart';
+import 'package:traveller_app/providers/destination_provider.dart';
+import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/screens/home.dart';
 import 'package:traveller_app/screens/signup.dart';
 import 'package:traveller_app/services/user_api_services.dart';
@@ -17,7 +25,7 @@ class _SignInPageState extends State<SignInPage> {
   bool _isLoading = false;
   bool _rememberMe = false;
 
-  void handleLogin() async {
+ void handleLogin() async {
     setState(() {
       _isLoading = true;
     });
@@ -28,10 +36,24 @@ class _SignInPageState extends State<SignInPage> {
         password: _passwordController.text.trim(),
       );
 
-      bool isSuccess = await UserService().login(credentials);
+      LoginResponse? loginResponse = await UserService().login(credentials);
 
-      if (isSuccess) {
+      if (loginResponse != null) {
         print("Login successful!");
+
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString('authToken', loginResponse.token);
+
+        Provider.of<UserProvider>(
+          context,
+          listen: false,
+        ).setUserData(loginResponse.user);
+
+        // Load destinations after successful login
+        await Provider.of<DestinationProvider>(
+          context,
+          listen: false,
+        ).fetchDestinations();
 
         // Navigate to home page
         Navigator.pushReplacement(
@@ -39,25 +61,40 @@ class _SignInPageState extends State<SignInPage> {
           MaterialPageRoute(builder: (context) => HomePage()),
         );
       } else {
-        // Show error message
+        // Show error message (Login failure)
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text("Login failed. Please check your credentials."),
           ),
         );
       }
     } catch (e) {
-      print("Error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("An error occurred. Please try again.")),
-      );
+      // Handle network errors, server errors, etc.
+      if (e is http.ClientException || e is http.SocketException) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Network error occurred. Please check your internet connection.",
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "An unexpected error occurred. Please try again later.",
+            ),
+          ),
+        );
+      }
+      print("Error: $e"); // Log the error for debugging
     }
 
     setState(() {
       _isLoading = false;
     });
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
