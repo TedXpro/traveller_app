@@ -17,7 +17,7 @@ class _BookPageState extends State<BookPage> {
   double _minPrice = 0;
   double _maxPrice = double.infinity;
   Map<String, String> agencyNames = {};
-  Map<String, Agency> _agencyCache = {}; // Cache agencies
+  final Map<String, Agency> _agencyCache = {}; // Cache agencies
   final AgencyServices _agencyServices = AgencyServices();
 
   @override

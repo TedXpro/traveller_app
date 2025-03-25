@@ -172,11 +172,11 @@ class _SignUpPageState extends State<SignUpPage> {
           }
 
           if (label == "First Name" &&
-              (value.length < 1 || value.length > 50)) {
+              (value.isEmpty || value.length > 50)) {
             return "First Name must be between 1 and 50 characters";
           }
 
-          if (label == "Last Name" && (value.length < 1 || value.length > 50)) {
+          if (label == "Last Name" && (value.isEmpty || value.length > 50)) {
             return "Last Name must be between 1 and 50 characters";
           }
           return null;

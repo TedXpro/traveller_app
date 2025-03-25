@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:traveller_app/models/booking.dart';
+import 'package:traveller_app/models/seat.dart';
 import 'package:traveller_app/models/travel.dart';
 import 'package:traveller_app/models/agency.dart';
+import 'package:traveller_app/screens/booking_confirmation.dart';
 import 'package:traveller_app/services/agency_api_services.dart';
+import 'package:traveller_app/services/booking_api_services.dart';
+import 'package:traveller_app/providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
 class TravelDetailsPage extends StatefulWidget {
   // Change to StatefulWidget
@@ -17,13 +23,27 @@ class TravelDetailsPage extends StatefulWidget {
 class _TravelDetailsPageState extends State<TravelDetailsPage> {
   String agencyName = 'Loading...';
   final AgencyServices _agencyServices = AgencyServices();
-  Map<String, Agency> _agencyCache = {}; // Cache agencies
+  final Map<String, Agency> _agencyCache = {};
+  final BookingServices _bookingServices = BookingServices();
+  List<int> takenSeats = [];
+  int? selectedSeat;
 
   @override
   void initState() {
     super.initState();
     _fetchAgencyName();
+    // _fetchTakenSeats();
   }
+
+  // Future<void> _fetchTakenSeats() async {
+  //   // Fetch taken seats using your API
+  //   List<Seat> bookedSeats = await _bookingServices.getAllBookings(
+  //     widget.travel.id,
+  //   );
+  //   setState(() {
+  //     takenSeats = bookedSeats.map((seat) => seat.seatNo).toList();
+  //   });
+  // }
 
   Future<void> _fetchAgencyName() async {
     if (_agencyCache.containsKey(widget.travel.agencyId)) {
@@ -52,6 +72,59 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       setState(() {
         agencyName = 'Error Loading Agency';
       });
+    }
+  }
+
+  Future<void> _bookTravel() async {
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      String travelerId =
+          userProvider.userData?.id ??
+          'default_user_id'; // Get user ID or use default
+
+      String paymentRef =
+          'temp_payment_ref_${DateTime.now().millisecondsSinceEpoch}'; // Temporary payment ref
+
+      DateTime now = DateTime.now().toUtc(); // Use UTC time
+      DateTime bookTimeLimit = now.add(const Duration(minutes: 30));
+
+      Seat seat = Seat(
+        travelId: widget.travel.id,
+        travelerId: travelerId,
+        seatNo: 20,
+        maxTime: bookTimeLimit,
+      );
+
+      await _bookingServices.chooseSeat(seat);
+      print("seat choosennnnnn");
+
+      Booking booking = Booking(
+        travelId: widget.travel.id,
+        travelerId: travelerId,
+        seatNo: 20,
+        tripType: 'One-way',
+        startLocation: widget.travel.startLocation,
+        paymentType: widget.travel.price,
+        paymentRef: paymentRef,
+        bookTime: DateTime.now().toUtc(),
+        payTime: DateTime.now().toUtc(),
+        bookTimeLimit: bookTimeLimit,
+        status: 'Pending',
+      );
+      print(booking.toJson());
+      print("Booking travel...");
+
+      await _bookingServices.book(booking);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BookingConfirmationPage(booking: booking),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to book travel: $e')));
     }
   }
 
@@ -117,9 +190,7 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
             const SizedBox(height: 20),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  // Implement booking logic here
-                },
+                onPressed: _bookTravel,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,

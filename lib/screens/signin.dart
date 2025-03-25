@@ -9,6 +9,7 @@ import 'package:traveller_app/models/login_response.dart';
 import 'package:traveller_app/providers/destination_provider.dart';
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/screens/home.dart';
+import 'package:traveller_app/screens/main_screen.dart';
 import 'package:traveller_app/screens/signup.dart';
 import 'package:traveller_app/services/user_api_services.dart';
 
@@ -58,7 +59,7 @@ class _SignInPageState extends State<SignInPage> {
         // Navigate to home page
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+          MaterialPageRoute(builder: (context) => MainScreen()),
         );
       } else {
         // Show error message (Login failure)

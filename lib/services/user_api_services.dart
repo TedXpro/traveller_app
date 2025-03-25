@@ -82,4 +82,24 @@ class UserService {
       return null;
     }
   }
+
+  Future<String?> updateUserProfile(User user) async {
+    // Return String? for error
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/user/edit'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(user.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        return null; // Return null on success
+      } else {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        return errorData['error']; // Return the error message
+      }
+    } catch (e) {
+      return "Network error: $e"; // Return network error
+    }
+  }
 }
