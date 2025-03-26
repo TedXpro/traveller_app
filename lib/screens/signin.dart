@@ -195,14 +195,15 @@ class _SignInPageState extends State<SignInPage> {
         SnackBar(
           content: Text(l10n.requestingResetCode),
           duration: const Duration(seconds: 10), // Keep visible for a bit
-        backgroundColor: Colors.blueAccent,
-          ), // Localize
+          backgroundColor: Colors.blueAccent,
+        ), // Localize
       );
 
       try {
-        final userService =
-            UserService(); 
-        bool success = await userService.requestPasswordResetCode(email: email); // Adjust isAgency
+        final userService = UserService();
+        bool success = await userService.requestPasswordResetCode(
+          email: email,
+        ); // Adjust isAgency
 
         // Check mounted after await before using context
         if (!mounted) return;
@@ -283,95 +284,121 @@ class _SignInPageState extends State<SignInPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            width: MediaQuery.of(context).size.width * 0.9,
-            constraints: const BoxConstraints(maxWidth: 400),
-            decoration: BoxDecoration(
-              color: theme.cardColor,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow:
-                  theme.brightness == Brightness.light
-                      ? [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ]
-                      : null,
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.signIn,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: theme.colorScheme.onSurface,
-                    ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors:
+                isDarkMode
+                    ? [
+                      Colors.grey.shade900,
+                      Colors.grey.shade800,
+                      Colors.grey.shade700,
+                    ]
+                    : [Colors.blue.shade50, Colors.white, Colors.white],
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Container(
+              padding: const EdgeInsets.all(32),
+              margin: const EdgeInsets.all(20),
+              width: MediaQuery.of(context).size.width * 0.9,
+              constraints: const BoxConstraints(maxWidth: 500),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType:
-                        TextInputType.emailAddress, // Correct keyboard type
-                    decoration: InputDecoration(
-                      labelText: l10n.email,
-                      // Input decoration styling will pick up theme.inputDecorationTheme automatically
-                      // border: OutlineInputBorder(), // Removed
-                    ),
-                    validator:
-                        (value) => validateEmail(value, l10n), // Pass l10n
-                  ),
-                  const SizedBox(height: 15),
-                  TextFormField(
-                    controller: _passwordController,
-                    keyboardType:
-                        TextInputType.visiblePassword, // Correct keyboard type
-                    obscureText: !_isPasswordVisible, // Use state variable here
-                    decoration: InputDecoration(
-                      labelText: l10n.password, // Localized
-                      // Input decoration styling will pick up theme.inputDecorationTheme automatically
-                      // border: OutlineInputBorder(), // Removed
-                      suffixIcon: IconButton(
-                        // Add the toggle button
-                        icon: Icon(
-                          // Change icon based on password visibility
-                          _isPasswordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          // Icon color will inherit from theme.inputDecorationTheme.suffixIconColor
-                        ),
-                        onPressed: () {
-                          // Toggle the state variable
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
+                ],
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.account_circle,
+                        size: 60,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
-                    validator:
-                        (value) => validatePassword(value, l10n), // Pass l10n
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Wrap the "Remember Me" row in Flexible
-                      Flexible(
-                        child: Row(
-                          mainAxisSize:
-                              MainAxisSize.min, // Use min size for inner row
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.signIn,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        labelText: l10n.email,
+                        prefixIcon: Icon(
+                          Icons.email,
+                          color: theme.colorScheme.primary,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        filled: true,
+                        fillColor: theme.cardColor,
+                      ),
+                      validator: (value) => validateEmail(value, l10n),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _passwordController,
+                      keyboardType: TextInputType.visiblePassword,
+                      obscureText: !_isPasswordVisible,
+                      decoration: InputDecoration(
+                        labelText: l10n.password,
+                        prefixIcon: Icon(
+                          Icons.lock,
+                          color: theme.colorScheme.primary,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        filled: true,
+                        fillColor: theme.cardColor,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: theme.colorScheme.primary,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
+                      ),
+                      validator: (value) => validatePassword(value, l10n),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
                           children: [
-                            // Checkbox styling will pick up theme.checkboxTheme automatically
                             Checkbox(
                               value: _rememberMe,
                               onChanged: (value) {
@@ -379,77 +406,109 @@ class _SignInPageState extends State<SignInPage> {
                                   _rememberMe = value!;
                                 });
                               },
-                            ),
-                            // Use theme's text style and Flexible to prevent overflow
-                            Flexible(
-                              child: Text(
-                                // Keep Flexible for text within the inner row
-                                l10n.rememberMe,
-                                style: theme.textTheme.bodyMedium,
-                                overflow: TextOverflow.ellipsis,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
                               ),
-                            ), // Localized
+                            ),
+                            Text(
+                              l10n.rememberMe,
+                              style: theme.textTheme.bodyMedium,
+                            ),
                           ],
                         ),
-                      ),
-                      // Wrap the "Forgot Password?" TextButton in Flexible
-                      Flexible(
-                        child: TextButton(
-                          onPressed: () {
-                            // Call the new handler function
-                            _handleForgotPassword(l10n);
-                          },
+                        TextButton(
+                          onPressed: () => _handleForgotPassword(l10n),
+                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
                           child: Text(
                             l10n.forgotPassword,
-                            overflow: TextOverflow.ellipsis,
-                          ), // Localized
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                        onPressed: handleLogin,
-                        // Set minimumSize to stretch the button horizontally
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : ElevatedButton(
+                          onPressed: handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: theme.colorScheme.onPrimary,
+                            minimumSize: const Size(double.infinity, 50),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 2,
+                          ),
+                          child: Text(
+                            l10n.signIn,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                        child: Text(l10n.signIn), // Localized
-                      ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Use theme's text style and Flexible to prevent overflow
-                      Flexible(
-                        // Keep Flexible for this text
-                        child: Text(
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: theme.dividerColor,
+                            thickness: 1,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            l10n.or,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: theme.dividerColor,
+                            thickness: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
                           l10n.dontHaveAnAccount,
                           style: theme.textTheme.bodyMedium,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ), // Localized
-                      TextButton(
-                        onPressed: () {
-                          // Check mounted before navigating
-                          if (!mounted) return;
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SignUpPage(),
+                        TextButton(
+                          onPressed: () {
+                            if (!mounted) return;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SignUpPage(),
+                              ),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                          ),
+                          child: Text(
+                            l10n.signUp,
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
                             ),
-                          );
-                        },
-                        child: Text(
-                          l10n.signUp,
-                          overflow: TextOverflow.ellipsis,
-                        ), // Localized
-                      ),
-                    ],
-                  ),
-                ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
