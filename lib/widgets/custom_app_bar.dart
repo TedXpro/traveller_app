@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:traveller_app/providers/user_provider.dart';
+import 'package:traveller_app/screens/settings.dart';
 import 'package:traveller_app/screens/signin.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
@@ -56,7 +57,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
           if (value == 'edit') {
             print('Edit Profile');
           } else if (value == 'settings') {
-            print('Settings');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+            ); // Navigate to SettingsScreen          
           } else if (value == 'logout') {
             _logout(context);
           }
