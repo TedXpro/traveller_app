@@ -171,8 +171,7 @@ class _SignUpPageState extends State<SignUpPage> {
             return "Enter a valid phone number";
           }
 
-          if (label == "First Name" &&
-              (value.isEmpty || value.length > 50)) {
+          if (label == "First Name" && (value.isEmpty || value.length > 50)) {
             return "First Name must be between 1 and 50 characters";
           }
 
@@ -228,20 +227,21 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Widget _buildAlreadyHaveAccount(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => SignInPage()),
-        );
-      },
-      child: const Text(
-        'Already have an account? Sign In',
-        style: TextStyle(
-          color: Colors.blue,
-          decoration: TextDecoration.underline,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text('Already have an account?'),
+        TextButton(
+          onPressed: () {
+            // Navigate to Sign Up
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SignInPage()),
+            );
+          },
+          child: const Text('Sign In'),
         ),
-      ),
+      ],
     );
   }
 }

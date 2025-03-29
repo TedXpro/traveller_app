@@ -8,7 +8,6 @@ import 'package:traveller_app/models/email_credential.dart';
 import 'package:traveller_app/models/login_response.dart';
 import 'package:traveller_app/providers/destination_provider.dart';
 import 'package:traveller_app/providers/user_provider.dart';
-import 'package:traveller_app/screens/home.dart';
 import 'package:traveller_app/screens/main_screen.dart';
 import 'package:traveller_app/screens/signup.dart';
 import 'package:traveller_app/services/user_api_services.dart';

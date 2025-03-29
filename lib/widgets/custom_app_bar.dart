@@ -10,13 +10,10 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   State<CustomAppBar> createState() => _CustomAppBarState();
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(60.0);
 }
 
 class _CustomAppBarState extends State<CustomAppBar> {
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-
-  // Log out and clear user data from UserProvider
   _logout(BuildContext context) async {
     await Provider.of<UserProvider>(context, listen: false).clearUserData();
     Navigator.pushReplacement(
@@ -28,108 +25,71 @@ class _CustomAppBarState extends State<CustomAppBar> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.black26,
+      backgroundColor: Color.fromRGBO(242, 246, 250, 0.658),
       title: Center(
+        // Center the title
         child: Row(
+          mainAxisSize: MainAxisSize.min, // Wrap content tightly
           children: [
-            Image.asset('assets/hawir_logo.png', height: 80), 
-            Text("Hawir", style: TextStyle(fontSize: 24, color: Colors.deepOrange)),
+            Image.asset('assets/hawir_logo.png', height: 60),
+            const SizedBox(width: 8), // Add spacing between logo and text
+            Text(
+              "Hawir",
+              style: TextStyle(
+                fontSize: 20,
+                color: Color.fromARGB(255, 233, 80, 24),
+              ),
+            ),
           ],
-        )),
-      actions: [
-        IconButton(
-          onPressed: (){}, 
-          icon: const Icon(Icons.map)
         ),
+      ),
+      actions: [
+        IconButton(onPressed: () {}, icon: const Icon(Icons.map)),
         IconButton(
           icon: const Icon(Icons.notifications),
           onPressed: () => _showNotification(context),
         ),
       ],
-      leading: IconButton(
-        icon: const Icon(Icons.account_circle),
-        onPressed: () => _showUserProfile(context),
+      leading: PopupMenuButton<String>(
+        icon: const Icon(Icons.menu),
+        onSelected: (String value) {
+          if (value == 'edit') {
+            print('Edit Profile');
+          } else if (value == 'settings') {
+            print('Settings');
+          } else if (value == 'logout') {
+            _logout(context);
+          }
+        },
+        itemBuilder:
+            (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'edit',
+                child: ListTile(
+                  leading: Icon(Icons.edit),
+                  title: Text('Edit Profile'),
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'settings',
+                child: ListTile(
+                  leading: Icon(Icons.settings),
+                  title: Text('Settings'),
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'logout',
+                child: ListTile(
+                  leading: Icon(Icons.logout),
+                  title: Text('Logout'),
+                ),
+              ),
+            ],
       ),
     );
   }
 
   void _showNotification(BuildContext context) {
     print('Notifications');
-  }
-
-  void _showUserProfile(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.5,
-            margin: EdgeInsets.only(top: kToolbarHeight),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(10),
-                bottomRight: Radius.circular(10),
-              ),
-            ),
-            padding: const EdgeInsets.all(16.0),
-            child: Consumer<UserProvider>(
-              builder: (context, userProvider, child) {
-                final userData = userProvider.userData;
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundImage:
-                          userData?.profilePhoto != null
-                              ? NetworkImage(userData!.profilePhoto!)
-                                  as ImageProvider
-                              : const AssetImage(
-                                'assets/profile_placeholder.png',
-                              ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (userData != null)
-                      Text(
-                        'Welcome, ${userData.firstName} ${userData.lastName}',
-                      ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      leading: const Icon(Icons.edit),
-                      title: const Text('Edit Profile'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        print('Edit Profile');
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.settings),
-                      title: const Text('Settings'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        print('Settings');
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.logout),
-                      title: const Text('Logout'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _logout(context);
-                      },
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
   }
 }

@@ -2,9 +2,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:traveller_app/models/change_credentials.dart';
 import 'package:traveller_app/models/email_credential.dart';
 import 'package:traveller_app/models/user.dart';
 import 'package:traveller_app/models/login_response.dart';
+import 'package:traveller_app/models/user_profile.dart';
 
 class UserService {
   final String baseUrl = 'http://localhost:8080';
@@ -83,7 +85,7 @@ class UserService {
     }
   }
 
-  Future<String?> updateUserProfile(User user) async {
+  Future<String?> updateUserProfile(UserProfile user) async {
     // Return String? for error
     try {
       final response = await http.put(
@@ -96,6 +98,27 @@ class UserService {
         return null; // Return null on success
       } else {
         final Map<String, dynamic> errorData = jsonDecode(response.body);
+        print(errorData);
+        return errorData['error']; // Return the error message
+      }
+    } catch (e) {
+      return "Network error: $e"; // Return network error
+    }
+  }
+
+  Future<String?> changeUserCredential(ChangeCredential userCredential) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/user/password/reset'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(userCredential.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        return null; // Return null on success
+      } else {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        print(errorData);
         return errorData['error']; // Return the error message
       }
     } catch (e) {

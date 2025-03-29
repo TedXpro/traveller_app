@@ -6,8 +6,6 @@ import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/providers/destination_provider.dart';
 import 'package:traveller_app/screens/main_screen.dart';
 import 'package:traveller_app/screens/signin.dart';
-import 'package:traveller_app/screens/home.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
