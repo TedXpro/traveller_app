@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 class CheckInPage extends StatelessWidget {
-  const CheckInPage({Key? key}) : super(key: key);
+  const CheckInPage({super.key});
   
   @override
   Widget build(BuildContext context) {

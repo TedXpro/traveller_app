@@ -5,7 +5,7 @@ import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/screens/edit_profile.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  const ProfilePage({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -6,6 +6,7 @@ import 'package:traveller_app/providers/destination_provider.dart';
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/screens/book.dart';
 import 'package:traveller_app/services/travel_api_service.dart';
+import 'package:traveller_app/utils/validation_utils.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,6 +21,9 @@ class _HomePageState extends State<HomePage> {
   int _passengers = 1;
   String? _departureLocation;
   String? _destinationLocation;
+  String? errorMessage;
+  String? departureLocationError;
+  String? destinationLocationError;
 
   @override
   Widget build(BuildContext context) {
@@ -104,17 +108,27 @@ class _HomePageState extends State<HomePage> {
           label: "Select Departure",
           value: _departureLocation,
           items: destinations,
-          onChanged: (value) => setState(() => _departureLocation = value),
+          onChanged: (value) {
+            setState(() {
+              _departureLocation = value;
+              departureLocationError = validateLocation(_departureLocation);
+            });
+          },
+          errorText: departureLocationError, // Pass errorText
         ),
         const SizedBox(height: 10),
-        // 🔄 Swap Button
         GestureDetector(
           onTap: () {
             setState(() {
-              // Swap departure and destination
               final temp = _departureLocation;
               _departureLocation = _destinationLocation;
               _destinationLocation = temp;
+              departureLocationError = validateLocation(
+                _departureLocation,
+              ); // validate after swap
+              destinationLocationError = validateLocation(
+                _destinationLocation,
+              ); // validate after swap
             });
           },
           child: Container(
@@ -134,25 +148,33 @@ class _HomePageState extends State<HomePage> {
           label: "Select Destination",
           value: _destinationLocation,
           items: destinations,
-          onChanged: (value) => setState(() => _destinationLocation = value),
+          onChanged: (value) {
+            setState(() {
+              _destinationLocation = value;
+              destinationLocationError = validateLocation(
+                _destinationLocation,
+              );
+            });
+          },
+          errorText: destinationLocationError, // Pass errorText
         ),
       ],
     );
   }
 
-
-  /// Generic Dropdown Builder
   Widget _buildDropdown({
     required String label,
     required String? value,
     required List<Destination> items,
     required void Function(String?) onChanged,
+    String? errorText, // Add errorText parameter
   }) {
     return DropdownButtonFormField<String>(
       value: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        errorText: errorText, // Use errorText
       ),
       items:
           items.map((destination) {
@@ -166,19 +188,37 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildDateInputs() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildDateInput('Departure', _departureDate, (date) {
-            setState(() => _departureDate = date);
-          }),
+        Row(
+          children: [
+            Expanded(
+              child: _buildDateInput('Departure', _departureDate, (date) {
+                setState(() {
+                  _departureDate = date;
+                  errorMessage = validateDates(_departureDate, _returnDate);
+                });
+              }),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildDateInput('Return', _returnDate, (date) {
+                setState(() {
+                  _returnDate = date;
+                  errorMessage = validateDates(_departureDate, _returnDate);
+                });
+              }),
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _buildDateInput('Return', _returnDate, (date) {
-            setState(() => _returnDate = date);
-          }),
-        ),
+        if (errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              errorMessage!,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
       ],
     );
   }
@@ -186,7 +226,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildDateInput(
     String label,
     DateTime? date,
-    Function(DateTime) onDateSelected,
+    Function(DateTime?) onDateSelected,
   ) {
     return InkWell(
       onTap: () async {
@@ -206,7 +246,25 @@ class _HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(8),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        child: Text(date == null ? label : "${date.toLocal()}".split(' ')[0]),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(date == null ? label : "${date.toLocal()}".split(' ')[0]),
+            AnimatedOpacity(
+              opacity: date != null ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child:
+                  date != null
+                      ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          onDateSelected(null);
+                        },
+                      )
+                      : const SizedBox.shrink(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -235,20 +293,58 @@ class _HomePageState extends State<HomePage> {
     return Center(
       child: ElevatedButton(
         onPressed: () async {
+          departureLocationError = validateLocation(_departureLocation);
+          destinationLocationError = validateLocation(_destinationLocation);
+          errorMessage = validateDates(_departureDate, _returnDate);
+
+          if (departureLocationError != null ||
+              destinationLocationError != null ||
+              errorMessage != null ||
+              (_departureLocation != null &&
+                  _destinationLocation != null &&
+                  _departureLocation == _destinationLocation)) {
+            setState(() {}); // trigger a rebuild to show errors
+
+            String snackBarMessage;
+            if (departureLocationError != null) {
+              snackBarMessage = departureLocationError!;
+            } else if (destinationLocationError != null) {
+              snackBarMessage = destinationLocationError!;
+            } else if (errorMessage != null) {
+              snackBarMessage = errorMessage!;
+            } else {
+              snackBarMessage =
+                  'Departure and destination locations cannot be the same.';
+            }
+
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(snackBarMessage)));
+            return;
+          }
+
           try {
-            List<Travel> travels = await searchTravelsApi(
+            List<Travel>? travels = await searchTravelsApi(
               _departureLocation ?? "",
               _destinationLocation ?? "",
               _departureDate,
               _returnDate,
             );
 
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => BookPage(travels: travels),
-              ),
-            );
+            if (travels.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No travels found for the selected criteria.'),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BookPage(travels: travels),
+                ),
+              );
+            }
           } catch (e) {
             ScaffoldMessenger.of(
               context,
@@ -260,7 +356,7 @@ class _HomePageState extends State<HomePage> {
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
         ),
-        child: const Text('Search Flights'),
+        child: const Text('Search Travels'),
       ),
     );
   }

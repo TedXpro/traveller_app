@@ -9,7 +9,7 @@ import 'package:traveller_app/services/user_api_services.dart';
 class EditProfilePage extends StatefulWidget {
   final User user;
 
-  const EditProfilePage({Key? key, required this.user}) : super(key: key);
+  const EditProfilePage({super.key, required this.user});
 
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
@@ -71,8 +71,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
             const SizedBox(height: 20),
             CircleAvatar(
               radius: 70,
-              child: const Icon(Icons.person, size: 70),
               backgroundColor: Colors.grey[300],
+              child: const Icon(Icons.person, size: 70),
             ),
             const SizedBox(height: 30),
             _buildTextField(_firstNameController, 'First Name'),

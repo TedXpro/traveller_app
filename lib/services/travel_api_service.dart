@@ -8,24 +8,22 @@ Future<List<Travel>> searchTravelsApi(
   DateTime? dateMin,
   DateTime? dateMax,
 ) async {
-  // Construct the query parameters
+  // Check for empty locations
+  if (startLocation.isEmpty || destination.isEmpty) {
+    return []; // Return empty list if locations are empty
+  }
+
   Map<String, String> queryParams = {
     'start_location': startLocation,
     'destination': destination,
   };
 
   if (dateMin != null) {
-    queryParams['date_min'] = dateMin.toIso8601String().substring(
-      0,
-      10,
-    ); // Format: YYYY-MM-DD
+    queryParams['date_min'] = dateMin.toIso8601String().substring(0, 10);
   }
 
   if (dateMax != null) {
-    queryParams['date_max'] = dateMax.toIso8601String().substring(
-      0,
-      10,
-    ); // Format: YYYY-MM-DD
+    queryParams['date_max'] = dateMax.toIso8601String().substring(0, 10);
   }
 
   final uri = Uri.http('localhost:8080', '/travels/search', queryParams);
@@ -34,14 +32,20 @@ Future<List<Travel>> searchTravelsApi(
   print("here ${response.body}");
 
   if (response.statusCode == 200) {
-    List<dynamic> decodedResponse = jsonDecode(response.body);
+    try {
+      List<dynamic> decodedResponse = jsonDecode(response.body);
 
-    return decodedResponse
-        .map(
-          (dynamic item) => Travel.fromJson(item as Map<String, dynamic>),
-        ) // Corrected line
-        .toList();
+      return decodedResponse
+          .map((dynamic item) => Travel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      // Handle decoding or mapping errors
+      print("Error decoding or mapping travels: $e");
+      return []; // Return empty list in case of error
+    }
   } else {
-    throw Exception('Failed to search travels');
+    // Handle non-200 status code
+    print("API error: ${response.statusCode}");
+    return []; // Return empty list in case of error
   }
 }

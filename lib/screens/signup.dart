@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:traveller_app/models/user.dart';
 import 'package:traveller_app/services/user_api_services.dart';
-import 'signin.dart';
+import 'package:traveller_app/screens/signin.dart'; // Corrected import
+import 'package:traveller_app/utils/validation_utils.dart'; // Import validation utils
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -87,56 +88,58 @@ class _SignUpPageState extends State<SignUpPage> {
     return Scaffold(
       backgroundColor: Colors.grey[200],
       body: Center(
-        child: Container(
-          width: 350,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Create an Account',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        child: SingleChildScrollView(
+          child: Container(
+            width: 350,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
                 ),
-                const SizedBox(height: 20),
-                _buildInputField('First Name', _firstNameController),
-                _buildInputField('Last Name', _lastNameController),
-                _buildLoginPreference(),
-                _loginPreference == 'Email'
-                    ? _buildInputField('Email', _emailController)
-                    : _buildInputField('Phone Number', _phoneController),
-                _buildInputField(
-                  'Password',
-                  _passwordController,
-                  isPassword: true,
-                ),
-                _buildInputField(
-                  'Confirm Password',
-                  _confirmPasswordController,
-                  isPassword: true,
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () => _signUp(context),
-                  child: const Text('Sign Up'),
-                ),
-                const SizedBox(height: 10),
-                _buildGoogleSignUpButton(),
-                const SizedBox(height: 15),
-                _buildAlreadyHaveAccount(context),
               ],
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Create an Account',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildInputField('First Name', _firstNameController),
+                  _buildInputField('Last Name', _lastNameController),
+                  _buildLoginPreference(),
+                  _loginPreference == 'Email'
+                      ? _buildInputField('Email', _emailController)
+                      : _buildInputField('Phone Number', _phoneController),
+                  _buildInputField(
+                    'Password',
+                    _passwordController,
+                    isPassword: true,
+                  ),
+                  _buildInputField(
+                    'Confirm Password',
+                    _confirmPasswordController,
+                    isPassword: true,
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => _signUp(context),
+                    child: const Text('Sign Up'),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildGoogleSignUpButton(),
+                  const SizedBox(height: 15),
+                  _buildAlreadyHaveAccount(context),
+                ],
+              ),
             ),
           ),
         ),
@@ -144,7 +147,7 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  Widget _buildInputField(
+Widget _buildInputField(
     String label,
     TextEditingController controller, {
     bool isPassword = false,
@@ -157,27 +160,33 @@ class _SignUpPageState extends State<SignUpPage> {
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          errorMaxLines: 3, // Allow the error to wrap onto 3 lines
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'This field is required';
           }
 
-          if (label == 'Email' && !value.contains('@')) {
+          if (label == 'Email' && !isValidEmail(value)) {
             return 'Enter a valid email address';
           }
 
-          if (label == "Phone Number" && value.length < 10) {
+          if (label == "Phone Number" && !isValidPhoneNumber(value)) {
             return "Enter a valid phone number";
           }
 
-          if (label == "First Name" && (value.isEmpty || value.length > 50)) {
-            return "First Name must be between 1 and 50 characters";
+          if (label == "First Name" && !isValidName(value)) {
+            return "First Name must contain only alphabets and be between 1 and 50 characters";
           }
 
-          if (label == "Last Name" && (value.isEmpty || value.length > 50)) {
-            return "Last Name must be between 1 and 50 characters";
+          if (label == "Last Name" && !isValidName(value)) {
+            return "Last Name must contain only alphabets and be between 1 and 50 characters";
           }
+
+          if (isPassword && !isPasswordSecure(value)) {
+            return "Password must be at least 8 characters long, include uppercase, lowercase, number, and special character";
+          }
+
           return null;
         },
       ),
