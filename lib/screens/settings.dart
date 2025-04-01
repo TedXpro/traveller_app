@@ -17,7 +17,7 @@ class SettingsScreen extends StatelessWidget {
               title: const Text('Theme'),
               subtitle: const Text('Change app theme'),
               onTap: () {
-                showThemePickerDialog(context); // Trigger theme dialog
+                // showThemePickerDialog(context); // Trigger theme dialog
               },
             ),
             // Add other settings options here...

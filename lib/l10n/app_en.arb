@@ -1,0 +1,19 @@
+{
+  "helloWorld": "Hello World",
+  "welcomeMessage": "Welcome to our app!",
+  "signIn": "Sign In",
+  "signUp": "Sign Up",
+  "profile": "Profile",
+  "home": "Home",
+  "logout": "Logout",
+  "firstName": "First Name",
+  "lastName": "Last Name",
+  "email": "Email",
+  "phoneNumber": "Phone Number",
+  "password": "Password",
+  "confirmPassword": "Confirm Password",
+  "loginPreference": "Login Preference",
+  "emailOption": "Email",
+  "phoneOption": "Phone",
+  "alreadyHaveAccount": "Already have an account?"
+}

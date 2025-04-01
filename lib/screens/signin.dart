@@ -12,6 +12,7 @@ import 'package:traveller_app/screens/main_screen.dart';
 import 'package:traveller_app/screens/signup.dart';
 import 'package:traveller_app/services/user_api_services.dart';
 import 'package:traveller_app/utils/validation_utils.dart'; // Import validation utils
+// import 'package:traveller_app/l10n/app_localizations.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});

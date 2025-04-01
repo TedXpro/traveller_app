@@ -19,10 +19,10 @@ class MyApp extends StatelessWidget {
   Future<Map<String, dynamic>> _loadAppData(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('authToken');
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    // final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-    await themeProvider.loadThemeMode(); // Load theme mode
+    // await themeProvider.loadThemeMode(); // Load theme mode
 
     if (token != null && token.isNotEmpty) {
       await userProvider.loadUserData(); // Load user data
@@ -37,14 +37,14 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => UserProvider()),
         ChangeNotifierProvider(create: (context) => DestinationProvider()),
-        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        // ChangeNotifierProvider(create: (context) => ThemeProvider()),
       ],
       child: Builder(
         builder: (context) {
           return FutureBuilder<Map<String, dynamic>>(
             future: _loadAppData(context),
             builder: (context, snapshot) {
-              final themeProvider = Provider.of<ThemeProvider>(context);
+              // final themeProvider = Provider.of<ThemeProvider>(context);
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const CircularProgressIndicator();
               } else if (snapshot.hasData) {
@@ -59,17 +59,17 @@ class MyApp extends StatelessWidget {
                 return MaterialApp(
                   debugShowCheckedModeBanner: false,
                   home: initialScreen,
-                  theme: lightTheme,
-                  darkTheme: darkTheme,
-                  themeMode: themeProvider.themeMode,
+                  // theme: lightTheme,
+                  // darkTheme: darkTheme,
+                  // themeMode: themeProvider.themeMode,
                 );
               } else {
                 return MaterialApp(
                   debugShowCheckedModeBanner: false,
                   home: const SignInPage(),
-                  theme: lightTheme,
-                  darkTheme: darkTheme,
-                  themeMode: themeProvider.themeMode,
+                  // theme: lightTheme,
+                  // darkTheme: darkTheme,
+                  // themeMode: themeProvider.themeMode,
                 );
               }
             },

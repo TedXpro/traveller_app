@@ -1,0 +1,19 @@
+{
+  "helloWorld": "Baga nagaan dhufte",
+  "welcomeMessage": "Gara app keenyaatti bakkekaa!",
+  "signIn": "Seeni",
+  "signUp": "Galmaa'i",
+  "profile": "Profile",
+  "home": "Mana",
+  "logout": "Ba'i",
+  "firstName": "Maqaa Duraa",
+  "lastName": "Maqaa Boodaa",
+  "email": "Imeelii",
+  "phoneNumber": "Lakkoofsa Bilbilaa",
+  "password": "Jecha Darbii",
+  "confirmPassword": "Jecha Darbii Mirkaaneessi",
+  "loginPreference": "Filannoo Seensa",
+  "emailOption": "Imeelii",
+  "phoneOption": "Bilbila",
+  "alreadyHaveAccount": "Akaakuu qabda?"
+}

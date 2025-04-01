@@ -1,0 +1,19 @@
+{
+  "helloWorld": "ሰላም ዓለም",
+  "welcomeMessage": "ወደ መተግበሪያችን እንኳን በደህና መጡ!",
+  "signIn": "ግባ",
+  "signUp": "ይመዝገቡ",
+  "profile": "መገለጫ",
+  "home": "ቤት",
+  "logout": "ውጣ",
+  "firstName": "የመጀመሪያ ስም",
+  "lastName": "የመጨረሻ ስም",
+  "email": "ኢሜይል",
+  "phoneNumber": "የስልክ ቁጥር",
+  "password": "የይለፍ ቃል",
+  "confirmPassword": "የይለፍ ቃል አረጋግጥ",
+  "loginPreference": "የመግቢያ ምርጫ",
+  "emailOption": "ኢሜይል",
+  "phoneOption": "ስልክ",
+  "alreadyHaveAccount": "መለያ አለህ?"
+}
