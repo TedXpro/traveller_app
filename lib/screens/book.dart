@@ -3,6 +3,7 @@ import 'package:traveller_app/models/travel.dart';
 import 'package:traveller_app/models/agency.dart';
 import 'package:traveller_app/screens/travel_details.dart';
 import 'package:traveller_app/services/agency_api_services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class BookPage extends StatefulWidget {
   final List<Travel> travels;
@@ -17,7 +18,7 @@ class _BookPageState extends State<BookPage> {
   double _minPrice = 0;
   double _maxPrice = double.infinity;
   Map<String, String> agencyNames = {};
-  final Map<String, Agency> _agencyCache = {}; // Cache agencies
+  final Map<String, Agency> _agencyCache = {};
   final AgencyServices _agencyServices = AgencyServices();
 
   @override
@@ -27,6 +28,7 @@ class _BookPageState extends State<BookPage> {
   }
 
   Future<void> _fetchAgencyNames() async {
+    final l10n = AppLocalizations.of(context)!;
     for (var travel in widget.travels) {
       if (!agencyNames.containsKey(travel.agencyId)) {
         if (_agencyCache.containsKey(travel.agencyId)) {
@@ -37,21 +39,23 @@ class _BookPageState extends State<BookPage> {
         }
 
         try {
-          Agency? agency = await _agencyServices.fetchAgencyApi(travel.agencyId);
+          Agency? agency = await _agencyServices.fetchAgencyApi(
+            travel.agencyId,
+          );
           if (agency != null) {
             setState(() {
               agencyNames[travel.agencyId] = agency.name;
-              _agencyCache[travel.agencyId] = agency; // Cache agency
+              _agencyCache[travel.agencyId] = agency;
             });
           } else {
             setState(() {
-              agencyNames[travel.agencyId] = "Unknown Agency";
+              agencyNames[travel.agencyId] = l10n.unknownAgency;
             });
           }
         } catch (e) {
           print("Error fetching agency: $e");
           setState(() {
-            agencyNames[travel.agencyId] = "Error Loading Agency";
+            agencyNames[travel.agencyId] = l10n.errorLoadingAgency;
           });
         }
       }
@@ -60,13 +64,15 @@ class _BookPageState extends State<BookPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<Travel> filteredTravels = widget.travels.where((travel) {
-      return travel.price >= _minPrice && travel.price <= _maxPrice;
-    }).toList();
+    final l10n = AppLocalizations.of(context)!;
+    List<Travel> filteredTravels =
+        widget.travels.where((travel) {
+          return travel.price >= _minPrice && travel.price <= _maxPrice;
+        }).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Available Trips'),
+        title: Text(l10n.availableTrips),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
@@ -81,9 +87,15 @@ class _BookPageState extends State<BookPage> {
           return Card(
             margin: const EdgeInsets.all(8.0),
             elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: ListTile(
-              leading: const Icon(Icons.directions_bus, size: 36, color: Colors.blue),
+              leading: const Icon(
+                Icons.directions_bus,
+                size: 36,
+                color: Colors.blue,
+              ),
               title: Text(
                 '${travel.startLocation} to ${travel.destination}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -91,8 +103,10 @@ class _BookPageState extends State<BookPage> {
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Agency: ${agencyNames[travel.agencyId] ?? "Loading..."}'),
-                  Text('Price: \$${travel.price}'),
+                  Text(
+                    l10n.agency(agencyNames[travel.agencyId] ?? l10n.loading),
+                  ),
+                  Text(l10n.price(travel.price)),
                 ],
               ),
               trailing: const Icon(Icons.chevron_right),
@@ -112,19 +126,18 @@ class _BookPageState extends State<BookPage> {
   }
 
   void _showFilterDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Filter Trips'),
+          title: Text(l10n.filterTrips),
           content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    'Price Range: \$${_minPrice.toInt()} - \$${_maxPrice.toInt()}',
-                  ),
+                  Text(l10n.priceRange(_minPrice.toInt(), _maxPrice.toInt())),
                   RangeSlider(
                     values: RangeValues(_minPrice, _maxPrice),
                     min: 0,
@@ -149,7 +162,7 @@ class _BookPageState extends State<BookPage> {
           ),
           actions: [
             TextButton(
-              child: const Text('Apply'),
+              child: Text(l10n.apply),
               onPressed: () {
                 setState(() {});
                 Navigator.of(context).pop();

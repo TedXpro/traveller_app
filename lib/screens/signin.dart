@@ -11,8 +11,8 @@ import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/screens/main_screen.dart';
 import 'package:traveller_app/screens/signup.dart';
 import 'package:traveller_app/services/user_api_services.dart';
-import 'package:traveller_app/utils/validation_utils.dart'; // Import validation utils
-// import 'package:traveller_app/l10n/app_localizations.dart';
+import 'package:traveller_app/utils/validation_utils.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -29,6 +29,8 @@ class _SignInPageState extends State<SignInPage> {
   bool _rememberMe = false;
 
   void handleLogin() async {
+    final l10n = AppLocalizations.of(context)!; // Get AppLocalizations instance
+
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -72,13 +74,13 @@ class _SignInPageState extends State<SignInPage> {
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Incorrect email or password.")),
+            SnackBar(content: Text(l10n.incorrectEmailOrPassword)), // Localized
           );
         }
       } catch (e) {
-        String errorMessage = "An unexpected error occurred.";
+        String errorMessage = l10n.unexpectedError; // Default localized message
         if (e is http.ClientException || e is http.SocketException) {
-          errorMessage = "Network error occurred.";
+          errorMessage = l10n.networkError; // Localized network error
         }
         ScaffoldMessenger.of(
           context,
@@ -109,6 +111,8 @@ class _SignInPageState extends State<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!; // Get AppLocalizations instance
+
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       body: Center(
@@ -133,28 +137,29 @@ class _SignInPageState extends State<SignInPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Sign In',
+                Text(
+                  l10n.signIn, // Localized
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
+                  decoration: InputDecoration(
+                    labelText: l10n.email, // Localized
                     border: OutlineInputBorder(),
                   ),
-                  validator: (value) => validateEmail(value),
+                  validator: (value) => validateEmail(value, l10n), // Pass l10n
                 ),
                 const SizedBox(height: 15),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
+                  decoration: InputDecoration(
+                    labelText: l10n.password, // Localized
                     border: OutlineInputBorder(),
                   ),
-                  validator: (value) => validatePassword(value),
+                  validator:
+                      (value) => validatePassword(value, l10n), // Pass l10n
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -170,14 +175,14 @@ class _SignInPageState extends State<SignInPage> {
                             });
                           },
                         ),
-                        const Text('Remember Me'),
+                        Text(l10n.rememberMe), // Localized
                       ],
                     ),
                     TextButton(
                       onPressed: () {
                         // TODO: Implement forgot password functionality
                       },
-                      child: const Text('Forgot Password?'),
+                      child: Text(l10n.forgotPassword), // Localized
                     ),
                   ],
                 ),
@@ -189,7 +194,7 @@ class _SignInPageState extends State<SignInPage> {
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 50),
                       ),
-                      child: const Text('Sign In'),
+                      child: Text(l10n.signIn), // Localized
                     ),
                 const SizedBox(height: 20),
                 const Center(child: Text('or')),
@@ -199,7 +204,7 @@ class _SignInPageState extends State<SignInPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account?"),
+                    Text(l10n.dontHaveAnAccount), // Localized
                     TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -207,7 +212,7 @@ class _SignInPageState extends State<SignInPage> {
                           MaterialPageRoute(builder: (context) => SignUpPage()),
                         );
                       },
-                      child: const Text('Sign Up'),
+                      child: Text(l10n.signUp), // Localized
                     ),
                   ],
                 ),
@@ -219,25 +224,27 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  String? validateEmail(String? value) {
+  String? validateEmail(String? value, AppLocalizations l10n) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your email';
+      return l10n.pleaseEnterEmail; // Localized
     }
     if (!isValidEmail(value)) {
-      return 'Enter a valid email address';
+      return l10n.validEmail; // Localized
     }
     return null;
   }
 
-  String? validatePassword(String? value) {
+  String? validatePassword(String? value, AppLocalizations l10n) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your password';
+      return l10n.pleaseEnterPassword; // Localized
     }
     // Add more complex password validation if needed
     return null;
   }
 
   Widget _buildGoogleSignUpButton() {
+    final l10n = AppLocalizations.of(context)!; // Get AppLocalizations instance
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
       onPressed: () {
@@ -249,8 +256,8 @@ class _SignInPageState extends State<SignInPage> {
         children: [
           Image.asset('assets/google_logo.png', height: 20),
           const SizedBox(width: 10),
-          const Text(
-            'Sign Up with Google',
+          Text(
+            l10n.signUpWithGoogle, // Localized
             style: TextStyle(color: Colors.black),
           ),
         ],

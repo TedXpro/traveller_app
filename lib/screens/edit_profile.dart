@@ -5,6 +5,7 @@ import 'package:traveller_app/models/user.dart';
 import 'package:traveller_app/models/user_profile.dart';
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/services/user_api_services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class EditProfilePage extends StatefulWidget {
   final User user;
@@ -58,6 +59,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -71,16 +73,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
               child: const Icon(Icons.person, size: 70),
             ),
             const SizedBox(height: 30),
-            _buildTextField(_firstNameController, 'First Name'),
-            _buildTextField(_lastNameController, 'Last Name'),
+            _buildTextField(_firstNameController, l10n.firstName),
+            _buildTextField(_lastNameController, l10n.lastName),
             _buildTextField(
               _emailController,
-              'Email',
+              l10n.email,
               keyboardType: TextInputType.emailAddress,
             ),
             _buildTextField(
               _phoneNumberController,
-              'Phone Number',
+              l10n.phoneNumber,
               keyboardType: TextInputType.phone,
               errorText: _phoneNumberError,
             ),
@@ -93,24 +95,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
               },
               child: Text(
                 _showPasswordFields
-                    ? 'Hide Password Change'
-                    : 'Change Password',
+                    ? l10n.hidePasswordChange
+                    : l10n.changePassword,
               ),
             ),
             if (_showPasswordFields) ...[
               _buildTextField(
                 _oldPasswordController,
-                'Old Password',
+                l10n.oldPassword,
                 obscureText: true,
               ),
               _buildTextField(
                 _newPasswordController,
-                'New Password',
+                l10n.newPassword,
                 obscureText: true,
               ),
               _buildTextField(
                 _confirmPasswordController,
-                'Confirm New Password',
+                l10n.confirmNewPassword,
                 obscureText: true,
                 errorText: _passwordError,
               ),
@@ -118,7 +120,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 onPressed: () {
                   _changePassword(context);
                 },
-                child: const Text('Change Password'),
+                child: Text(l10n.changePassword),
               ),
             ],
             const SizedBox(height: 40),
@@ -138,7 +140,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              child: const Text('Save Changes'),
+              child: Text(l10n.saveChanges),
             ),
             const SizedBox(height: 20),
           ],

@@ -5,6 +5,8 @@ import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/screens/edit_profile.dart';
 import 'package:traveller_app/screens/settings.dart'; // Import SettingsPage
 import 'package:traveller_app/screens/signin.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+// Import AppLocalizations
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -19,6 +21,7 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: Consumer<UserProvider>(
         builder: (context, userProvider, child) {
@@ -54,7 +57,7 @@ class ProfilePage extends StatelessWidget {
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
-                              ),
+                              ),  
                             ),
                             Text(
                               user.email!,
@@ -70,7 +73,7 @@ class ProfilePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                _buildProfileButton(context, Icons.edit, 'Edit Profile', () {
+                _buildProfileButton(context, Icons.edit, l10n.editProfile, () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -78,7 +81,7 @@ class ProfilePage extends StatelessWidget {
                     ),
                   );
                 }),
-                _buildProfileButton(context, Icons.settings, 'Settings', () {
+                _buildProfileButton(context, Icons.settings, l10n.settings, () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -89,7 +92,7 @@ class ProfilePage extends StatelessWidget {
                 _buildProfileButton(
                   context,
                   Icons.logout,
-                  'Log Out',
+                  l10n.logOut,
                   () => _logout(context),
                 ),
               ],

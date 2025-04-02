@@ -9,9 +9,9 @@ import 'package:traveller_app/services/agency_api_services.dart';
 import 'package:traveller_app/services/booking_api_services.dart';
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class TravelDetailsPage extends StatefulWidget {
-  // Change to StatefulWidget
   final Travel travel;
 
   const TravelDetailsPage({super.key, required this.travel});
@@ -32,18 +32,7 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
   void initState() {
     super.initState();
     _fetchAgencyName();
-    // _fetchTakenSeats();
   }
-
-  // Future<void> _fetchTakenSeats() async {
-  //   // Fetch taken seats using your API
-  //   List<Seat> bookedSeats = await _bookingServices.getAllBookings(
-  //     widget.travel.id,
-  //   );
-  //   setState(() {
-  //     takenSeats = bookedSeats.map((seat) => seat.seatNo).toList();
-  //   });
-  // }
 
   Future<void> _fetchAgencyName() async {
     if (_agencyCache.containsKey(widget.travel.agencyId)) {
@@ -60,17 +49,17 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       if (agency != null) {
         setState(() {
           agencyName = agency.name;
-          _agencyCache[widget.travel.agencyId] = agency; // Cache agency
+          _agencyCache[widget.travel.agencyId] = agency;
         });
       } else {
         setState(() {
-          agencyName = 'Agency Not Found';
+          agencyName = AppLocalizations.of(context)!.agencyNotFound;
         });
       }
     } catch (e) {
       print('Error fetching agency: $e');
       setState(() {
-        agencyName = 'Error Loading Agency';
+        agencyName = AppLocalizations.of(context)!.errorLoadingAgency;
       });
     }
   }
@@ -78,14 +67,10 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
   Future<void> _bookTravel() async {
     try {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      String travelerId =
-          userProvider.userData?.id ??
-          'default_user_id'; // Get user ID or use default
-
+      String travelerId = userProvider.userData?.id ?? 'default_user_id';
       String paymentRef =
-          'temp_payment_ref_${DateTime.now().millisecondsSinceEpoch}'; // Temporary payment ref
-
-      DateTime now = DateTime.now().toUtc(); // Use UTC time
+          'temp_payment_ref_${DateTime.now().millisecondsSinceEpoch}';
+      DateTime now = DateTime.now().toUtc();
       DateTime bookTimeLimit = now.add(const Duration(minutes: 30));
 
       Seat seat = Seat(
@@ -96,7 +81,7 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       );
 
       await _bookingServices.chooseSeat(seat);
-      print("seat choosennnnnn");
+      print(AppLocalizations.of(context)!.seatChosen);
 
       Booking booking = Booking(
         travelId: widget.travel.id,
@@ -112,7 +97,7 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
         status: 'Pending',
       );
       print(booking.toJson());
-      print("Booking travel...");
+      print(AppLocalizations.of(context)!.bookingTravel);
 
       await _bookingServices.book(booking);
       Navigator.push(
@@ -122,23 +107,30 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to book travel: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!.failedToBookTravel(e.toString()),
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Travel Details')),
+      appBar: AppBar(title: Text(l10n.travelDetails)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Agency: $agencyName', // Use fetched agency name
+              l10n.agency(agencyName),
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -157,31 +149,34 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildDetailRow(
-                      'Start Location',
+                      l10n.startLocation,
                       widget.travel.startLocation,
                     ),
-                    _buildDetailRow('Destination', widget.travel.destination),
                     _buildDetailRow(
-                      'Price',
+                      l10n.destination,
+                      widget.travel.destination,
+                    ),
+                    _buildDetailRow(
+                      l10n.priceDisplay,
                       '\$${widget.travel.price.toStringAsFixed(2)}',
                     ),
                     _buildDetailRow(
-                      'Departure',
+                      l10n.departure,
                       DateFormat(
                         'MMM d, yyyy HH:mm',
                       ).format(widget.travel.plannedStartTime),
                     ),
                     _buildDetailRow(
-                      'Arrival',
+                      l10n.arrival,
                       widget.travel.estArrivalTime != null
                           ? DateFormat(
                             'MMM d, yyyy HH:mm',
                           ).format(widget.travel.estArrivalTime!)
-                          : 'Not Available',
+                          : l10n.notAvailable,
                     ),
                     _buildDetailRow(
-                      'Driver',
-                      widget.travel.driverName ?? 'Not Assigned',
+                      l10n.driver,
+                      widget.travel.driverName ?? l10n.notAssigned,
                     ),
                   ],
                 ),
@@ -202,7 +197,7 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Book Now'),
+                child: Text(l10n.bookNow),
               ),
             ),
           ],

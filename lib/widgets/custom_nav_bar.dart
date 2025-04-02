@@ -1,5 +1,6 @@
 // custom_nav_bar.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
 
 class CustomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -13,15 +14,16 @@ class CustomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return BottomNavigationBar(
-      items: const <BottomNavigationBarItem>[
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Bookings'),
+      items: <BottomNavigationBarItem>[
+        BottomNavigationBarItem(icon: const Icon(Icons.home), label: l10n.home),
+        BottomNavigationBarItem(icon: Icon(Icons.book), label: l10n.bookings),
         BottomNavigationBarItem(
           icon: Icon(Icons.check_circle),
-          label: 'Check-In',
+          label: l10n.checkIn,
         ),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: l10n.profile),
       ],
       currentIndex: selectedIndex,
       selectedItemColor: Colors.blue,

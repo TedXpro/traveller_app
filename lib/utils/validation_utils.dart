@@ -24,8 +24,9 @@ bool isPasswordSecure(String password) {
 }
 
 String? validateLocation(String? location) {
+
   if (location == null || location.isEmpty) {
-    return 'Please select a location.';
+    return 'pleaseSelectLocation';
   }
   return null;
 }
@@ -33,7 +34,7 @@ String? validateLocation(String? location) {
 String? validateDates(DateTime? departureDate, DateTime? returnDate) {
   if (departureDate != null && returnDate != null) {
     if (departureDate.isAfter(returnDate)) {
-      return 'Departure date cannot be after return date.';
+      return 'departureAfterReturn';
     }
   }
   return null;

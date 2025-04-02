@@ -1,19 +1,408 @@
 {
-  "helloWorld": "Hello World",
-  "welcomeMessage": "Welcome to our app!",
-  "signIn": "Sign In",
-  "signUp": "Sign Up",
-  "profile": "Profile",
+  "hawir": "Hawir",
+  "@hawir": {
+    "description": "Name of the app."
+  },
+  "editProfile": "Edit Profile",
+  "@editProfile": {
+    "description": "Label for the action to edit the user's profile."
+  },
+  "bookATrip": "Book a Trip",
+  "@bookATrip": {
+    "description": "Label for the action to book a new trip."
+  },
+  "selectDeparture": "Select Departure",
+  "@selectDeparture": {
+    "description": "Label for the field or action to select the trip's departure location."
+  },
+  "selectDestination": "Select Destination",
+  "@selectDestination": {
+    "description": "Label for the field or action to select the trip's destination."
+  },
+  "departure": "Departure",
+  "@departure": {
+    "description": "Label for the trip's departure location."
+  },
+  "returnDate": "Destination",
+  "@returnDate": {
+    "description": "Label for the trip's destination location (or return location)."
+  },
+  "passengers": "Passengers",
+  "@passengers": {
+    "description": "Label for the field to specify the number of passengers."
+  },
+  "searchTravel": "Search Travel",
+  "@searchTravel": {
+    "description": "Label for the action to search for available trips."
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Label for the screen or action to access app settings."
+  },
+  "logOut": "Log Out",
+  "@logOut": {
+    "description": "Label for the action to log the user out of the app."
+  },
   "home": "Home",
-  "logout": "Logout",
-  "firstName": "First Name",
-  "lastName": "Last Name",
+  "@home": {
+    "description": "Label for the main screen of the app."
+  },
+  "bookings": "Bookings",
+  "@bookings": {
+    "description": "Label for the screen or section showing the user's trip bookings."
+  },
+  "checkIn": "Check In",
+  "@checkIn": {
+    "description": "Label for the action to check in for a trip."
+  },
+  "profile": "Profile",
+  "@profile": {
+    "description": "Label for the screen showing the user's profile information."
+  },
   "email": "Email",
-  "phoneNumber": "Phone Number",
+  "@email": {
+    "description": "Label for the email address field."
+  },
   "password": "Password",
-  "confirmPassword": "Confirm Password",
+  "@password": {
+    "description": "Label for the password field."
+  },
+  "forgotPassword": "Forgot Password?",
+  "@forgotPassword": {
+    "description": "Label for the action to recover a forgotten password."
+  },
+  "rememberMe": "Remember Me",
+  "@rememberMe": {
+    "description": "Label for the option to remember the user's login credentials."
+  },
+  "signIn": "Sign In",
+  "@signIn": {
+    "description": "Label for the action to sign in to the app."
+  },
+  "signUpWithGoogle": "Sign Up with Google",
+  "@signUpWithGoogle": {
+    "description": "Label for the action to sign up using a Google account."
+  },
+  "dontHaveAnAccount": "Don't have an account?",
+  "@dontHaveAnAccount": {
+    "description": "Label for the prompt asking if the user doesn't have an account."
+  },
+  "signUp": "Sign Up",
+  "@signUp": {
+    "description": "Label for the action to sign up for a new account."
+  },
+  "createAccount": "Create an Account",
+  "@createAccount": {
+    "description": "Label for the heading of the account creation page."
+  },
+  "firstName": "First Name",
+  "@firstName": {
+    "description": "Label for the user's first name field."
+  },
+  "lastName": "Last Name",
+  "@lastName": {
+    "description": "Label for the user's last name field."
+  },
   "loginPreference": "Login Preference",
+  "@loginPreference": {
+    "description": "Label for the option to choose login method (email or phone)."
+  },
+  "phoneNumber": "Phone Number",
+  "@phoneNumber": {
+    "description": "Label for the user's phone number field."
+  },
+  "confirmPassword": "Confirm Password",
+  "@confirmPassword": {
+    "description": "Label for the field to confirm the user's password."
+  },
+  "thisFieldRequired": "This field is required",
+  "@thisFieldRequired": {
+    "description": "Error message when a required field is empty."
+  },
+  "validEmail": "Enter a valid email address",
+  "@validEmail": {
+    "description": "Error message for an invalid email format."
+  },
+  "validPhone": "Enter a valid phone number",
+  "@validPhone": {
+    "description": "Error message for an invalid phone number format."
+  },
+  "validFirstName": "First Name must contain only alphabets and be between 1 and 50 characters",
+  "@validFirstName": {
+    "description": "Error message for an invalid first name."
+  },
+  "validLastName": "Last Name must contain only alphabets and be between 1 and 50 characters",
+  "@validLastName": {
+    "description": "Error message for an invalid last name."
+  },
+  "securePassword": "Password must be at least 8 characters long, include uppercase, lowercase, number, and special character",
+  "@securePassword": {
+    "description": "Error message for a weak password."
+  },
   "emailOption": "Email",
+  "@emailOption": {
+    "description": "Label for the email login option."
+  },
   "phoneOption": "Phone",
-  "alreadyHaveAccount": "Already have an account?"
+  "@phoneOption": {
+    "description": "Label for the phone number login option."
+  },
+  "alreadyHaveAccount": "Already have an account?",
+  "@alreadyHaveAccount": {
+    "description": "Prompt asking if the user already has an account."
+  },
+  "verificationEmailSent": "Verification Email Sent",
+  "@verificationEmailSent": {
+    "description": "Title of the dialog shown after successful sign-up."
+  },
+  "verificationEmailContent": "A verification email has been sent to your account. Please check your inbox (and spam folder) to verify your email address.",
+  "@verificationEmailContent": {
+    "description": "Content of the verification email sent dialog."
+  },
+  "ok": "OK",
+  "@ok": {
+    "description": "Label for the OK button in dialogs."
+  },
+  "passwordsDoNotMatch": "Passwords do not match",
+  "@passwordsDoNotMatch": {
+    "description": "Error message when the entered passwords do not match."
+  },
+  "signUpFailed": "Sign up failed",
+  "@signUpFailed": {
+    "description": "Error message when the sign-up process fails."
+  },
+  "incorrectEmailOrPassword": "Incorrect email or password.",
+  "@incorrectEmailOrPassword": {
+    "description": "Error message when the email or password entered is incorrect."
+  },
+  "unexpectedError": "An unexpected error occurred.",
+  "@unexpectedError": {
+    "description": "Error message for a general, unexpected error."
+  },
+  "networkError": "Network error occurred.",
+  "@networkError": {
+    "description": "Error message when a network-related error occurs."
+  },
+  "pleaseEnterEmail": "Please enter your email",
+  "@pleaseEnterEmail": {
+    "description": "Error message when the email field is empty."
+  },
+  "pleaseEnterPassword": "Please enter your password",
+  "@pleaseEnterPassword": {
+    "description": "Error message when the password field is empty."
+  },
+  "signUpError": "Sign up error: {error}",
+  "@signUpError": {
+    "description": "Error message for a general sign-up error, with a placeholder for the error details.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network error",
+        "description": "The specific error message."
+      }
+    }
+  },
+  "welcome": "Welcome {username}!",
+  "@welcome": {
+    "description": "Welcome message for the user, with a placeholder for the username.",
+    "placeholders": {
+      "username": {
+        "type": "String",
+        "example": "John",
+        "description": "The user's name."
+      }
+    }
+  },
+  "pleaseSelectLocation": "Please select a location.",
+  "@pleaseSelectLocation": {
+    "description": "Error message when no location is selected."
+  },
+  "departureAfterReturn": "Departure date cannot be after return date.",
+  "@departureAfterReturn": {
+    "description": "Error message when the departure date is after the return date."
+  },
+  "availableTrips": "Available Trips",
+  "@availableTrips": {
+    "description": "Title of the page showing available trips."
+  },
+  "filterTrips": "Filter Trips",
+  "@filterTrips": {
+    "description": "Title of the filter dialog."
+  },
+  "priceRange": "Price Range: {minprice} - {maxprice}",
+  "@priceRange": {
+    "description": "Label for the price range filter.",
+    "placeholders": {
+      "minprice": {
+        "type": "int",
+        "example": "0",
+        "description": "Minimum price."
+      },
+      "maxprice": {
+        "type": "int",
+        "example": "1000",
+        "description": "Maximum price."
+      }
+    }
+  },
+  "apply": "Apply",
+  "@apply": {
+    "description": "Label for the apply button in the filter dialog."
+  },
+  "agency": "Agency: {agencyName}",
+  "@agency": {
+    "description": "Label for the agency name.",
+    "placeholders": {
+      "agencyName": {
+        "type": "String",
+        "example": "Example Agency",
+        "description": "The name of the agency."
+      }
+    }
+  },
+  "price": "Price: {price}",
+  "@price": {
+    "description": "Label for the price of the trip.",
+    "placeholders": {
+      "price": {
+        "type": "double",
+        "example": "150.00",
+        "description": "The price of the trip."
+      }
+    }
+  },
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Text shown when data is loading."
+  },
+  "unknownAgency": "Unknown Agency",
+  "@unknownAgency": {
+    "description": "Text shown when agency name is unknown."
+  },
+  "errorLoadingAgency": "Error Loading Agency",
+  "@errorLoadingAgency": {
+    "description": "Text shown when agency name loading fails."
+  },
+  "travelDetails": "Travel Details",
+  "@travelDetails": {
+    "description": "Title of the travel details page."
+  },
+  "startLocation": "Start Location",
+  "@startLocation": {
+    "description": "Label for the start location of the travel."
+  },
+  "destination": "Destination",
+  "@destination": {
+    "description": "Label for the destination of the travel."
+  },
+  "priceDisplay": "Price",
+  "@priceDisplay": {
+    "description": "Label for the price of the travel."
+  },
+  "arrival": "Arrival",
+  "@arrival": {
+    "description": "Label for the arrival time of the travel."
+  },
+  "driver": "Driver",
+  "@driver": {
+    "description": "Label for the driver name of the travel."
+  },
+  "bookNow": "Book Now",
+  "@bookNow": {
+    "description": "Label for the button to book the travel."
+  },
+  "agencyNotFound": "Agency Not Found",
+  "@agencyNotFound": {
+    "description": "Message when agency is not found."
+  },
+  "failedToBookTravel": "Failed to book travel: {error}",
+  "@failedToBookTravel": {
+    "description": "Message when booking travel fails.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network error",
+        "description": "The error message."
+      }
+    }
+  },
+  "notAvailable": "Not Available",
+  "@notAvailable": {
+    "description": "Message when arrival time or driver is not available."
+  },
+  "notAssigned": "Not Assigned",
+  "@notAssigned": {
+    "description": "Message when driver is not assigned."
+  },
+  "seatChosen": "Seat chosennnnn",
+  "@seatChosen": {
+    "description": "Message when a seat is chosen."
+  },
+  "bookingTravel": "Booking travel...",
+  "@bookingTravel": {
+    "description": "Message indicating travel booking is in progress."
+  },
+  "changePassword": "Change Password",
+  "@changePassword": {
+    "description": "Button to toggle password change fields."
+  },
+  "hidePasswordChange": "Hide Password Change",
+  "@hidePasswordChange": {
+    "description": "Button to hide password change fields."
+  },
+  "oldPassword": "Old Password",
+  "@oldPassword": {
+    "description": "Label for the old password input field."
+  },
+  "newPassword": "New Password",
+  "@newPassword": {
+    "description": "Label for the new password input field."
+  },
+  "confirmNewPassword": "Confirm New Password",
+  "@confirmNewPassword": {
+    "description": "Label for the confirm new password input field."
+  },
+  "saveChanges": "Save Changes",
+  "@saveChanges": {
+    "description": "Button to save profile changes."
+  },
+  "profileUpdatedSuccess": "Profile updated successfully.",
+  "@profileUpdatedSuccess": {
+    "description": "Message when profile is updated successfully."
+  },
+  "profileUpdatedRefetchFailed": "Profile updated successfully, but failed to refetch data.",
+  "@profileUpdatedRefetchFailed": {
+    "description": "Message when profile is updated but refetching data fails."
+  },
+  "theme": "Theme",
+  "@theme": {
+    "description": "Label for the theme setting."
+  },
+  "changeAppTheme": "Change app theme",
+  "@changeAppTheme": {
+    "description": "Subtitle for the theme setting."
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Label for the language setting."
+  },
+  "currentLanguage": "Current Language: {languageName}",
+  "@currentLanguage": {
+    "description": "Subtitle for the language setting, showing the current language.",
+    "placeholders": {
+      "languageName": {
+        "type": "String",
+        "example": "English",
+        "description": "The name of the current language."
+      }
+    }
+  },
+  "english": "English",
+  "@english": {
+    "description": "Label for the English language option."
+  },
+  "amharic": "Amharic",
+  "@amharic": {
+    "description": "Label for the Amharic language option."
+  }
 }

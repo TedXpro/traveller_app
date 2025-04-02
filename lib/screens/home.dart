@@ -7,6 +7,7 @@ import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/screens/book.dart';
 import 'package:traveller_app/services/travel_api_service.dart';
 import 'package:traveller_app/utils/validation_utils.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,6 +28,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!; // Get AppLocalizations
+
     return Scaffold(
       body: Stack(
         children: [
@@ -45,9 +48,9 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildWelcomeText(),
+                  _buildWelcomeText(l10n), // Pass l10n
                   const SizedBox(height: 20),
-                  _buildTripCard(),
+                  _buildTripCard(l10n), // Pass l10n
                 ],
               ),
             ),
@@ -57,12 +60,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildWelcomeText() {
+  Widget _buildWelcomeText(AppLocalizations l10n) {
     return Consumer<UserProvider>(
       builder: (context, userProvider, child) {
         final userName = userProvider.userData?.firstName ?? 'User';
-        return Text(
-          'Welcome, $userName',
+        return Text(l10n.welcome(userName), // Localize "Welcome"
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -73,7 +75,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTripCard() {
+  Widget _buildTripCard(AppLocalizations l10n) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 5,
@@ -82,15 +84,18 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Book a Trip', style: TextStyle(fontSize: 18)),
+            Text(
+              l10n.bookATrip,
+              style: const TextStyle(fontSize: 18),
+            ), // Localize
             const SizedBox(height: 20),
-            _buildDropdownInputs(),
+            _buildDropdownInputs(l10n), // Pass l10n
             const SizedBox(height: 10),
-            _buildDateInputs(),
+            _buildDateInputs(l10n), // Pass l10n
             const SizedBox(height: 10),
-            _buildPassengersInput(),
+            _buildPassengersInput(l10n), // Pass l10n
             const SizedBox(height: 20),
-            _buildSearchButton(),
+            _buildSearchButton(l10n), // Pass l10n
           ],
         ),
       ),
@@ -98,14 +103,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// 🔹 New Approach: Using Dropdown for Selecting Destinations
-  Widget _buildDropdownInputs() {
+  Widget _buildDropdownInputs(AppLocalizations l10n) {
     final destinationProvider = Provider.of<DestinationProvider>(context);
     final destinations = destinationProvider.destinations;
 
     return Column(
       children: [
         _buildDropdown(
-          label: "Select Departure",
+          label: l10n.selectDeparture, // Localize
           value: _departureLocation,
           items: destinations,
           onChanged: (value) {
@@ -114,7 +119,7 @@ class _HomePageState extends State<HomePage> {
               departureLocationError = validateLocation(_departureLocation);
             });
           },
-          errorText: departureLocationError, // Pass errorText
+          errorText: departureLocationError,
         ),
         const SizedBox(height: 10),
         GestureDetector(
@@ -123,12 +128,8 @@ class _HomePageState extends State<HomePage> {
               final temp = _departureLocation;
               _departureLocation = _destinationLocation;
               _destinationLocation = temp;
-              departureLocationError = validateLocation(
-                _departureLocation,
-              ); // validate after swap
-              destinationLocationError = validateLocation(
-                _destinationLocation,
-              ); // validate after swap
+              departureLocationError = validateLocation(_departureLocation);
+              destinationLocationError = validateLocation(_destinationLocation);
             });
           },
           child: Container(
@@ -145,18 +146,16 @@ class _HomePageState extends State<HomePage> {
         ),
         const SizedBox(height: 10),
         _buildDropdown(
-          label: "Select Destination",
+          label: l10n.selectDestination, // Localize
           value: _destinationLocation,
           items: destinations,
           onChanged: (value) {
             setState(() {
               _destinationLocation = value;
-              destinationLocationError = validateLocation(
-                _destinationLocation,
-              );
+              destinationLocationError = validateLocation(_destinationLocation);
             });
           },
-          errorText: destinationLocationError, // Pass errorText
+          errorText: destinationLocationError,
         ),
       ],
     );
@@ -167,14 +166,14 @@ class _HomePageState extends State<HomePage> {
     required String? value,
     required List<Destination> items,
     required void Function(String?) onChanged,
-    String? errorText, // Add errorText parameter
+    String? errorText,
   }) {
     return DropdownButtonFormField<String>(
       value: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        errorText: errorText, // Use errorText
+        errorText: errorText,
       ),
       items:
           items.map((destination) {
@@ -187,13 +186,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDateInputs() {
+  Widget _buildDateInputs(AppLocalizations l10n) {
     return Column(
       children: [
         Row(
           children: [
             Expanded(
-              child: _buildDateInput('Departure', _departureDate, (date) {
+              child: _buildDateInput(l10n.departure, _departureDate, (date) {
+                // Localize
                 setState(() {
                   _departureDate = date;
                   errorMessage = validateDates(_departureDate, _returnDate);
@@ -202,7 +202,8 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: _buildDateInput('Return', _returnDate, (date) {
+              child: _buildDateInput(l10n.returnDate, _returnDate, (date) {
+                // Localize
                 setState(() {
                   _returnDate = date;
                   errorMessage = validateDates(_departureDate, _returnDate);
@@ -269,10 +270,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildPassengersInput() {
+  Widget _buildPassengersInput(AppLocalizations l10n) {
     return Row(
       children: [
-        const Text('Passengers: '),
+        Text('${l10n.passengers}: '), // Localize
         IconButton(
           icon: const Icon(Icons.remove),
           onPressed:
@@ -289,7 +290,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSearchButton() {
+  Widget _buildSearchButton(AppLocalizations l10n) {
     return Center(
       child: ElevatedButton(
         onPressed: () async {
@@ -303,7 +304,7 @@ class _HomePageState extends State<HomePage> {
               (_departureLocation != null &&
                   _destinationLocation != null &&
                   _departureLocation == _destinationLocation)) {
-            setState(() {}); // trigger a rebuild to show errors
+            setState(() {});
 
             String snackBarMessage;
             if (departureLocationError != null) {
@@ -334,7 +335,9 @@ class _HomePageState extends State<HomePage> {
             if (travels.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('No travels found for the selected criteria.'),
+                  content: Text(
+                    'No travels found for the selected criteria.',
+                  ), // Localize
                 ),
               );
             } else {
@@ -348,7 +351,7 @@ class _HomePageState extends State<HomePage> {
           } catch (e) {
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text('Error: $e')));
+            ).showSnackBar(SnackBar(content: Text('Error: $e'))); // Localize
           }
         },
         style: ElevatedButton.styleFrom(
@@ -356,7 +359,7 @@ class _HomePageState extends State<HomePage> {
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
         ),
-        child: const Text('Search Travels'),
+        child: Text(l10n.searchTravel), // Localize
       ),
     );
   }

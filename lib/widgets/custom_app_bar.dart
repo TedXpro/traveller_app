@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/screens/settings.dart';
 import 'package:traveller_app/screens/signin.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -25,6 +26,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AppBar(
       backgroundColor: Color.fromRGBO(242, 246, 250, 0.658),
       title: Center(
@@ -35,7 +37,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
             Image.asset('assets/hawir_logo.png', height: 60),
             const SizedBox(width: 8), // Add spacing between logo and text
             Text(
-              "Hawir",
+              l10n.hawir,
               style: TextStyle(
                 fontSize: 20,
                 color: Color.fromARGB(255, 233, 80, 24),
@@ -60,32 +62,32 @@ class _CustomAppBarState extends State<CustomAppBar> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SettingsScreen()),
-            ); // Navigate to SettingsScreen          
+            ); // Navigate to SettingsScreen
           } else if (value == 'logout') {
             _logout(context);
           }
         },
         itemBuilder:
             (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'edit',
                 child: ListTile(
                   leading: Icon(Icons.edit),
-                  title: Text('Edit Profile'),
+                  title: Text(l10n.editProfile),
                 ),
               ),
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'settings',
                 child: ListTile(
                   leading: Icon(Icons.settings),
-                  title: Text('Settings'),
+                  title: Text(l10n.settings),
                 ),
               ),
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'logout',
                 child: ListTile(
                   leading: Icon(Icons.logout),
-                  title: Text('Logout'),
+                  title: Text(l10n.logOut),
                 ),
               ),
             ],

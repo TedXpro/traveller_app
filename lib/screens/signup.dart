@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:traveller_app/models/user.dart';
 import 'package:traveller_app/services/user_api_services.dart';
-import 'package:traveller_app/screens/signin.dart'; // Corrected import
-import 'package:traveller_app/utils/validation_utils.dart'; // Import validation utils
+import 'package:traveller_app/screens/signin.dart';
+import 'package:traveller_app/utils/validation_utils.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -25,11 +26,13 @@ class _SignUpPageState extends State<SignUpPage> {
   final UserService _userService = UserService();
 
   Future<void> _signUp(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!; // Get AppLocalizations instance
+
     if (_formKey.currentState!.validate()) {
       if (_passwordController.text != _confirmPasswordController.text) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+        ).showSnackBar(SnackBar(content: Text(l10n.passwordsDoNotMatch)));
         return;
       }
 
@@ -45,32 +48,32 @@ class _SignUpPageState extends State<SignUpPage> {
       try {
         final newUser = await _userService.signup(user);
         if (newUser != null) {
-          _showVerificationDialog(context); // Show verification message
+          _showVerificationDialog(context, l10n); // Pass l10n
         } else {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('Sign up failed')));
+          ).showSnackBar(SnackBar(content: Text(l10n.signUpFailed)));
         }
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Sign up error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.signUpError(e.toString())),
+          ),
+        );
       }
     }
   }
 
-  void _showVerificationDialog(BuildContext context) {
+  void _showVerificationDialog(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Verification Email Sent'),
-          content: const Text(
-            'A verification email has been sent to your account. Please check your inbox (and spam folder) to verify your email address.',
-          ),
+          title: Text(l10n.verificationEmailSent),
+          content: Text(l10n.verificationEmailContent),
           actions: <Widget>[
             TextButton(
-              child: const Text('OK'),
+              child: Text(l10n.ok),
               onPressed: () {
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(builder: (context) => SignInPage()),
@@ -85,6 +88,8 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!; // Get AppLocalizations instance
+
     return Scaffold(
       backgroundColor: Colors.grey[200],
       body: Center(
@@ -108,36 +113,42 @@ class _SignUpPageState extends State<SignUpPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Create an Account',
+                  Text(
+                    l10n.createAccount,
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
-                  _buildInputField('First Name', _firstNameController),
-                  _buildInputField('Last Name', _lastNameController),
-                  _buildLoginPreference(),
+                  _buildInputField(l10n.firstName, _firstNameController, l10n),
+                  _buildInputField(l10n.lastName, _lastNameController, l10n),
+                  _buildLoginPreference(l10n),
                   _loginPreference == 'Email'
-                      ? _buildInputField('Email', _emailController)
-                      : _buildInputField('Phone Number', _phoneController),
+                      ? _buildInputField(l10n.email, _emailController, l10n)
+                      : _buildInputField(
+                        l10n.phoneNumber,
+                        _phoneController,
+                        l10n,
+                      ),
                   _buildInputField(
-                    'Password',
+                    l10n.password,
                     _passwordController,
+                    l10n,
                     isPassword: true,
                   ),
                   _buildInputField(
-                    'Confirm Password',
+                    l10n.confirmPassword,
                     _confirmPasswordController,
+                    l10n,
                     isPassword: true,
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () => _signUp(context),
-                    child: const Text('Sign Up'),
+                    child: Text(l10n.signUp),
                   ),
                   const SizedBox(height: 10),
-                  _buildGoogleSignUpButton(),
+                  _buildGoogleSignUpButton(l10n),
                   const SizedBox(height: 15),
-                  _buildAlreadyHaveAccount(context),
+                  _buildAlreadyHaveAccount(context, l10n),
                 ],
               ),
             ),
@@ -147,9 +158,10 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-Widget _buildInputField(
+  Widget _buildInputField(
     String label,
-    TextEditingController controller, {
+    TextEditingController controller,
+    AppLocalizations l10n, {
     bool isPassword = false,
   }) {
     return Padding(
@@ -160,31 +172,31 @@ Widget _buildInputField(
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          errorMaxLines: 3, // Allow the error to wrap onto 3 lines
+          errorMaxLines: 3,
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return 'This field is required';
+            return l10n.thisFieldRequired;
           }
 
-          if (label == 'Email' && !isValidEmail(value)) {
-            return 'Enter a valid email address';
+          if (label == l10n.email && !isValidEmail(value)) {
+            return l10n.validEmail;
           }
 
-          if (label == "Phone Number" && !isValidPhoneNumber(value)) {
-            return "Enter a valid phone number";
+          if (label == l10n.phoneNumber && !isValidPhoneNumber(value)) {
+            return l10n.validPhone;
           }
 
-          if (label == "First Name" && !isValidName(value)) {
-            return "First Name must contain only alphabets and be between 1 and 50 characters";
+          if (label == l10n.firstName && !isValidName(value)) {
+            return l10n.validFirstName;
           }
 
-          if (label == "Last Name" && !isValidName(value)) {
-            return "Last Name must contain only alphabets and be between 1 and 50 characters";
+          if (label == l10n.lastName && !isValidName(value)) {
+            return l10n.validLastName;
           }
 
           if (isPassword && !isPasswordSecure(value)) {
-            return "Password must be at least 8 characters long, include uppercase, lowercase, number, and special character";
+            return l10n.securePassword;
           }
 
           return null;
@@ -193,16 +205,21 @@ Widget _buildInputField(
     );
   }
 
-  Widget _buildLoginPreference() {
+  Widget _buildLoginPreference(AppLocalizations l10n) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        const Text('Login Preference: '),
+        Text('${l10n.loginPreference}: '),
         DropdownButton<String>(
           value: _loginPreference,
           items:
               ['Email', 'Phone'].map((option) {
-                return DropdownMenuItem(value: option, child: Text(option));
+                return DropdownMenuItem(
+                  value: option,
+                  child: Text(
+                    option == 'Email' ? l10n.emailOption : l10n.phoneOption,
+                  ),
+                );
               }).toList(),
           onChanged: (value) {
             setState(() {
@@ -214,7 +231,7 @@ Widget _buildInputField(
     );
   }
 
-  Widget _buildGoogleSignUpButton() {
+  Widget _buildGoogleSignUpButton(AppLocalizations l10n) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
       onPressed: () {
@@ -226,29 +243,25 @@ Widget _buildInputField(
         children: [
           Image.asset('assets/google_logo.png', height: 20),
           const SizedBox(width: 10),
-          const Text(
-            'Sign Up with Google',
-            style: TextStyle(color: Colors.black),
-          ),
+          Text(l10n.signUpWithGoogle, style: TextStyle(color: Colors.black)),
         ],
       ),
     );
   }
 
-  Widget _buildAlreadyHaveAccount(BuildContext context) {
+  Widget _buildAlreadyHaveAccount(BuildContext context, AppLocalizations l10n) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text('Already have an account?'),
+        Text(l10n.alreadyHaveAccount),
         TextButton(
           onPressed: () {
-            // Navigate to Sign Up
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => SignInPage()),
             );
           },
-          child: const Text('Sign In'),
+          child: Text(l10n.signIn),
         ),
       ],
     );
