@@ -30,5 +30,16 @@ class BookingServices {
     }
   }
 
-  
+  Future<List<Booking>> getBookingsForTraveler(String travelerId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/booking/traveler/$travelerId'),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => Booking.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load bookings: ${response.body}');
+    }
+  }
 }

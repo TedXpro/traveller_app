@@ -212,22 +212,22 @@ ThemeData darkTheme = ThemeData(
     backgroundColor: const Color(0xFF303030), // Match scaffold background
   ),
   checkboxTheme: CheckboxThemeData(
-    fillColor: MaterialStateProperty.all(
+    fillColor: WidgetStateProperty.all(
       const Color(0xFFBDBDBD),
     ), // Lighter grey checkbox
   ),
   radioTheme: RadioThemeData(
-    fillColor: MaterialStateProperty.all(
+    fillColor: WidgetStateProperty.all(
       const Color(0xFFBDBDBD),
     ), // Lighter grey radio
   ),
   dropdownMenuTheme: DropdownMenuThemeData(
     textStyle: const TextStyle(color: Colors.white70),
     menuStyle: MenuStyle(
-      backgroundColor: MaterialStateProperty.all(
+      backgroundColor: WidgetStateProperty.all(
         const Color(0xFF424242),
       ), // Match card color
-      surfaceTintColor: MaterialStateProperty.all(const Color(0xFF424242)),
+      surfaceTintColor: WidgetStateProperty.all(const Color(0xFF424242)),
     ),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
