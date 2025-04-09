@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:traveller_app/providers/user_provider.dart';
+import 'package:traveller_app/screens/map.dart';
 import 'package:traveller_app/screens/settings.dart';
 import 'package:traveller_app/screens/signin.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
@@ -47,7 +48,15 @@ class _CustomAppBarState extends State<CustomAppBar> {
         ),
       ),
       actions: [
-        IconButton(onPressed: () {}, icon: const Icon(Icons.map)),
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+              // Navigate to MapPage
+              context,
+              MaterialPageRoute(builder: (context) => const MapPage()),
+            );
+          },
+        icon: const Icon(Icons.map)),
         IconButton(
           icon: const Icon(Icons.notifications),
           onPressed: () => _showNotification(context),

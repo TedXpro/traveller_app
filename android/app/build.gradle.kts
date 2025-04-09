@@ -42,3 +42,12 @@ android {
 flutter {
     source = "../.."
 }
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { stream ->
+        localProperties.load(stream)
+    }
+}
+def mapsApiKey = localProperties['MAPS_API_KEY']

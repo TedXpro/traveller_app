@@ -9,9 +9,14 @@ import 'package:traveller_app/utils/theme.dart';
 import 'package:traveller_app/providers/theme_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/foundation.dart'; // for kIsWeb
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb) {
+    await dotenv.load(fileName: ".env"); // Load .env file here
+  }
   runApp(MyApp());
 }
 
