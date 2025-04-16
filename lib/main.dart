@@ -11,13 +11,54 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_core/firebase_core.dart'; // Import Firebase Core
+import 'package:firebase_messaging/firebase_messaging.dart'; // Import Firebase Messaging
+
+// Define the background message handler as a top-level function
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print("Handling a background message: ${message.messageId}");
+  // You can perform background tasks here, but UI updates are limited.
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb) {
     await dotenv.load(fileName: ".env"); // Load .env file here
   }
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
+  // Set up background message handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // Request notification permissions (for iOS and Web)
+  await requestNotificationPermissions();
+
   runApp(MyApp());
+}
+
+Future<void> requestNotificationPermissions() async {
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  NotificationSettings settings = await messaging.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
+
+  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+    print('User granted permission');
+  } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+    print('User granted provisional permission');
+  } else {
+    print('User declined or has not accepted permission');
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -48,7 +89,32 @@ class MyAppState extends State<MyApp> {
       await userProvider.loadUserData(); // Load user data
     }
 
+    // Initialize Firebase Messaging listeners here
+    setupFirebaseMessagingListeners(context);
+
     return {'token': token, 'userDataLoaded': userProvider.userData != null};
+  }
+
+  void setupFirebaseMessagingListeners(BuildContext context) {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    // Handle foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('Got a message whilst in the foreground!');
+      print('Message data: ${message.data}');
+      if (message.notification != null) {
+        print(
+          'Message also contained a notification: ${message.notification!.body}',
+        );
+        // TODO: Display the notification using a local notification plugin if needed
+      }
+    });
+
+    // Handle when the app is opened from a notification
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print('App opened from a notification!');
+      // TODO: Navigate to the appropriate screen based on the notification data
+    });
   }
 
   @override
