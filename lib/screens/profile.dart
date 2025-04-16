@@ -57,10 +57,10 @@ class ProfilePage extends StatelessWidget {
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
-                              ),  
+                              ),
                             ),
                             Text(
-                              user.email!,
+                              "hello ${user.email}",
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white70,

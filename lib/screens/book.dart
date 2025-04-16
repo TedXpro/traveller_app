@@ -24,10 +24,17 @@ class _BookPageState extends State<BookPage> {
   @override
   void initState() {
     super.initState();
-    _fetchAgencyNames();
+    // _fetchAgencyNames();
   }
 
-  Future<void> _fetchAgencyNames() async {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Call _fetchAgencyNames() here, as the context is now ready
+    _fetchAgencyNames(context);
+  }
+
+  Future<void> _fetchAgencyNames(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     for (var travel in widget.travels) {
       if (!agencyNames.containsKey(travel.agencyId)) {

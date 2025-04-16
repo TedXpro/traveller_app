@@ -192,10 +192,8 @@ class _MapPageState extends State<MapPage> {
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         ),
       );
-      if (mapController != null) {
-        mapController.animateCamera(CameraUpdate.newLatLng(driverLocation!));
-      }
-    }
+      mapController.animateCamera(CameraUpdate.newLatLng(driverLocation!));
+        }
   }
 
   void _onMapCreated(GoogleMapController controller) {
