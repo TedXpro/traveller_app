@@ -129,6 +129,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "8.9.5"
+  bus_seat_plan:
+    dependency: "direct main"
+    description:
+      name: bus_seat_plan
+      sha256: "572ed6ade2c523d9c2411cde7cc87b966e2f81a60bc4b3d41f4b57ae725e58a8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
   chapasdk:
     dependency: "direct main"
     description:
@@ -265,6 +273,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.3"
+  equatable:
+    dependency: transitive
+    description:
+      name: equatable
+      sha256: "567c64b3cb4cf82397aac55f4f0cbd3ca20d77c6c03bedbc4ceaddc08904aef7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.7"
   fake_async:
     dependency: transitive
     description:

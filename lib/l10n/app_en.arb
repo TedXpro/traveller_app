@@ -404,5 +404,17 @@
   "amharic": "Amharic",
   "@amharic": {
     "description": "Label for the Amharic language option."
+  },
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Label for the notifications setting."
+  },
+  "markAllAsRead": "Mark all as read",
+  "@markAllAsRead": {
+    "description": "Label for the action to mark all notifications as read."
+  },
+  "noNewNotifications": "No new notifications",
+  "@noNewNotifications": {
+    "description": "Message when there are no new notifications."
   }
 }

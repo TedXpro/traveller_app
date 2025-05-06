@@ -1,5 +1,6 @@
 import 'dart:io' as http;
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -67,6 +68,16 @@ class _SignInPageState extends State<SignInPage> {
             context,
             listen: false,
           ).fetchDestinations();
+
+          // Get FCM token after successful login
+          String? fcmToken = await FirebaseMessaging.instance.getToken();
+          if (fcmToken != null) {
+            // Send the FCM token to your backend
+            await UserService().storeFCMToken(userId: loginResponse.user.id!, fcmToken: fcmToken);
+          } else {
+            print('Failed to get FCM token during login.');
+            // Optionally handle this error
+          }
 
           Navigator.pushReplacement(
             context,

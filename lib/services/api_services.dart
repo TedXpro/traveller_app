@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:traveller_app/constants/api_constants.dart';
 
 class ApiService {
-  static const String baseUrl = "http://your-backend-url";
-
   static Future<Map<String, dynamic>> login(
     String email,
     String password,

@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:traveller_app/models/destination.dart';
+import 'package:traveller_app/constants/api_constants.dart';
 
 Future<List<Destination>> fetchDestinationsApi() async {
-  final response = await http.get(
-    Uri.parse('http://localhost:8080/destination/all'),
-  );
+  final response = await http.get(Uri.parse('$baseUrl/destination/all'));
 
   if (response.statusCode == 200) {
     // Decode the JSON response

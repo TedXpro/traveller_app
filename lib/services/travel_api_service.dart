@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:traveller_app/models/travel.dart';
+import 'package:traveller_app/constants/api_constants.dart';
 
 Future<List<Travel>> searchTravelsApi(
   String startLocation,
@@ -26,9 +27,7 @@ Future<List<Travel>> searchTravelsApi(
     queryParams['date_max'] = dateMax.toIso8601String().substring(0, 10);
   }
 
-  final uri = Uri.http('localhost:8080', '/travels/search', queryParams);
-
-  final response = await http.get(uri);
+  final response = await http.get(Uri.http(searchUrl, '/travels/search', queryParams));
   print("here ${response.body}");
 
   if (response.statusCode == 200) {

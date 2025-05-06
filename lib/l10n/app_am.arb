@@ -87,5 +87,8 @@
   "language": "ቋንቋ",
   "currentLanguage": "የአሁኑ ቋንቋ: {languageName}",
   "english": "እንግሊዝኛ",
-  "amharic": "አማርኛ"
+  "amharic": "አማርኛ",
+  "notifications": "ማስታወቂያዎች",
+  "markAllAsRead": "ሁሉንም እንደተነበበ ይምረጡ",
+  "noNewNotifications": "አዲስ ማስታወቂያዎች የለም"
 }

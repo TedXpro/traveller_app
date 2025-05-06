@@ -99,7 +99,7 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       print(booking.toJson());
       print(AppLocalizations.of(context)!.bookingTravel);
 
-      await _bookingServices.book(booking);
+      // await _bookingServices.book(booking);
       Navigator.push(
         context,
         MaterialPageRoute(
