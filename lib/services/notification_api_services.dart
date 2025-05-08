@@ -15,7 +15,9 @@ Future<List<CustomNotification>> getNotificationsForTraveller(
     return []; // Return empty list for invalid input
   }
 
-  final uri = Uri.http(searchUrl, '/notification/$travellerId');
+  final uri = Uri.http(
+    // headers: {"authorization": "Bearer "}
+  '/notification/$travellerId');
 
   try {
     final response = await http.get(uri);

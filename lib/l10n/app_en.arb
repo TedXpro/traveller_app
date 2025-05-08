@@ -1,4 +1,5 @@
 {
+  "@@locale": "en",
   "hawir": "Hawir",
   "@hawir": {
     "description": "Name of the app."
@@ -334,9 +335,16 @@
   "@notAssigned": {
     "description": "Message when driver is not assigned."
   },
-  "seatChosen": "Seat chosennnnn",
+  "seatChosen": "Seat {seatNumber} chosen.",
   "@seatChosen": {
-    "description": "Message when a seat is chosen."
+    "description": "Message when a seat is successfully chosen.",
+    "placeholders": {
+      "seatNumber": {
+        "type": "int",
+        "example": "20",
+        "description": "The number of the seat that was chosen."
+      }
+    }
   },
   "bookingTravel": "Booking travel...",
   "@bookingTravel": {
@@ -416,5 +424,154 @@
   "noNewNotifications": "No new notifications",
   "@noNewNotifications": {
     "description": "Message when there are no new notifications."
+  },
+  "pleaseSelectSeat": "Please select a seat.",
+  "@pleaseSelectSeat": {
+    "description": "Error message shown when the user tries to book without selecting a seat."
+  },
+  "loginRequiredForBooking": "Login is required for booking.",
+  "@loginRequiredForBooking": {
+    "description": "Error message shown when an anonymous user tries to book a seat."
+  },
+  "selectYourSeat": "Select your seat",
+  "@selectYourSeat": {
+    "description": "Heading or label for the seat selection section."
+  },
+  "bookingDetails": "Booking Details",
+  "@bookingDetails": {
+    "description": "Title of the booking details page."
+  },
+  "bookingSummary": "Booking Summary",
+  "@bookingSummary": {
+    "description": "Section title for the booking details summary."
+  },
+  "travelId": "Travel ID",
+  "@travelId": {
+    "description": "Label for the travel ID."
+  },
+  "travelerId": "Traveler ID",
+  "@travelerId": {
+    "description": "Label for the traveler ID."
+  },
+  "seatNo": "Seat No",
+  "@seatNo": {
+    "description": "Label for the seat number."
+  },
+  "tripType": "Trip Type",
+  "@tripType": {
+    "description": "Label for the trip type."
+  },
+  "paymentType": "Payment Type",
+  "@paymentType": {
+    "description": "Label for the payment type."
+  },
+  "paymentRef": "Payment Ref",
+  "@paymentRef": {
+    "description": "Label for the payment reference."
+  },
+  "bookTime": "Book Time",
+  "@bookTime": {
+    "description": "Label for the booking time."
+  },
+  "payTime": "Pay Time",
+  "@payTime": {
+    "description": "Label for the payment time."
+  },
+  "notPaidYet": "Not Paid Yet",
+  "@notPaidYet": {
+    "description": "Text shown when a booking has not been paid yet."
+  },
+  "bookTimeLimit": "Book Time Limit",
+  "@bookTimeLimit": {
+    "description": "Label for the booking time limit."
+  },
+  "status": "Status",
+  "@status": {
+    "description": "Label for the booking status."
+  },
+  "proceedToPayment": "Proceed to Payment",
+  "@proceedToPayment": {
+    "description": "Label for the button to proceed to the payment page."
+  },
+  "unknownStatus": "Unknown Status",
+  "@unknownStatus": {
+    "description": "Text shown when the booking status is unknown or missing."
+  },
+  "bookingConfirmationTitle": "Booking Confirmation",
+  "@bookingConfirmationTitle": {
+    "description": "Title of the booking confirmation page."
+  },
+  "bookingConfirmedMessage": "Booking Confirmed!",
+  "@bookingConfirmedMessage": {
+    "description": "Message shown to the user after a booking is confirmed."
+  },
+  "paymentDue": "Payment Due",
+  "@paymentDue": {
+    "description": "Label for the payment due time."
+  },
+  "paymentAmount": "Payment Amount",
+  "@paymentAmount": {
+    "description": "Label for the amount to be paid."
+  },
+  "currencyETB": "ETB",
+  "@currencyETB": {
+    "description": "Currency code for Ethiopian Birr."
+  },
+  "initiatingPayment": "Initiating payment...",
+  "@initiatingPayment": {
+    "description": "Message shown while the payment process is being initiated."
+  },
+  "paymentTitle": "Trip Payment",
+  "@paymentTitle": {
+    "description": "Title for the payment transaction."
+  },
+  "paymentDescription": "Payment for Travel ID: {travelId}",
+  "@paymentDescription": {
+    "description": "Description for the payment transaction, with travel ID.",
+    "placeholders": {
+      "travelId": {
+        "type": "String",
+        "example": "XYZ123",
+        "description": "The ID of the travel being paid for."
+      }
+    }
+  },
+  "paymentSuccessful": "Payment successful!",
+  "@paymentSuccessful": {
+    "description": "Message shown after a successful payment."
+  },
+  "paymentFailed": "Payment failed: {message}",
+  "@paymentFailed": {
+    "description": "Message shown after a failed payment, with failure details.",
+    "placeholders": {
+      "message": {
+        "type": "String",
+        "example": "Insufficient funds",
+        "description": "The payment failure message."
+      }
+    }
+  },
+  "paymentError": "Payment error: {error}",
+  "@paymentError": {
+    "description": "Generic message shown if an error occurs during payment initiation or processing, with error details.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network connectivity issue",
+        "description": "The error message details."
+      }
+    }
+  },
+  "loginRequiredForPayment": "Login is required for payment.",
+  "@loginRequiredForPayment": {
+    "description": "Message shown if payment is attempted by a user who is not logged in."
+  },
+  "payButtonLabel": "Pay Now",
+  "@payButtonLabel": {
+    "description": "Label for the button that initiates payment."
+  },
+  "backToBookings": "Back to Bookings",
+  "@backToBookings": {
+    "description": "Label for the button to navigate back to the bookings list."
   }
 }

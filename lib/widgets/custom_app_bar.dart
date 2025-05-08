@@ -20,15 +20,18 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
 
 class _CustomAppBarState extends State<CustomAppBar> {
   bool _hasUnreadNotifications = false;
-RemoteMessage? _latestForegroundMessage; // Store the latest message
+  // We no longer need to store the message here as navigation uses routes
+  // RemoteMessage? _latestForegroundMessage;
 
   @override
   void initState() {
     super.initState();
+    // Foreground message listener for the notification badge
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       setState(() {
         _hasUnreadNotifications = true;
-        _latestForegroundMessage = message; // Store the message
+        // You might want to store the message data temporarily if needed for the badge count or a summary,
+        // but navigating with routes means the NotificationScreen gets the data via arguments.
       });
       print('Got a message whilst in the foreground!');
       print('Message data: ${message.data}');
@@ -38,27 +41,29 @@ RemoteMessage? _latestForegroundMessage; // Store the latest message
         );
       }
     });
+
+    // Note: Handling opening the app from a notification (terminated/background)
+    // is done in main.dart's setupInteractedMessage using the navigatorKey and routes.
+    // This listener in the AppBar is primarily for updating the badge when
+    // a notification arrives while the app is in the foreground.
   }
 
   void _navigateToNotifications(BuildContext context) {
+    // Clear the unread state when the user navigates to the notification screen
     setState(() {
       _hasUnreadNotifications = false;
     });
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => NotificationScreen(
-              foregroundMessage: _latestForegroundMessage, // Pass the message
-            ),
-      ),
-    );
-    _latestForegroundMessage =
-        null; // Clear the stored message after navigation
+    // Navigate using the route name defined in main.dart
+    // The NotificationScreen will handle fetching/displaying notifications
+    // from storage or passed arguments if applicable.
+    Navigator.of(context).pushNamed('/notification');
   }
 
   _logout(BuildContext context) async {
+    // Ensure the UserProvider is accessible
     await Provider.of<UserProvider>(context, listen: false).clearUserData();
+    // Use pushReplacementNamed if you have a named route for SignInPage
+    // Otherwise, the current MaterialPageRoute is fine
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const SignInPage()),
@@ -68,8 +73,12 @@ RemoteMessage? _latestForegroundMessage; // Store the latest message
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final appBarTheme = theme.appBarTheme;
+
     return AppBar(
-      backgroundColor: const Color.fromRGBO(242, 246, 250, 0.658),
+      backgroundColor: appBarTheme.backgroundColor,
       title: Center(
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -78,9 +87,9 @@ RemoteMessage? _latestForegroundMessage; // Store the latest message
             const SizedBox(width: 8),
             Text(
               l10n.hawir,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
-                color: Color.fromARGB(255, 233, 80, 24),
+                color: appBarTheme.foregroundColor,
               ),
             ),
           ],
@@ -122,6 +131,7 @@ RemoteMessage? _latestForegroundMessage; // Store the latest message
         icon: const Icon(Icons.menu),
         onSelected: (String value) {
           if (value == 'edit') {
+            // TODO: Implement Edit Profile Navigation
             print('Edit Profile');
           } else if (value == 'settings') {
             Navigator.push(
@@ -137,22 +147,37 @@ RemoteMessage? _latestForegroundMessage; // Store the latest message
               PopupMenuItem<String>(
                 value: 'edit',
                 child: ListTile(
-                  leading: const Icon(Icons.edit),
-                  title: Text(l10n.editProfile),
+                  leading: Icon(Icons.edit, color: colorScheme.onSurface),
+                  title: Text(
+                    l10n.editProfile,
+                    style: TextStyle(color: colorScheme.onSurface),
+                  ),
                 ),
               ),
+              // --- ADDING THE DIVIDER HERE ---
+              const PopupMenuDivider(),
+              // ---------------------------------
               PopupMenuItem<String>(
                 value: 'settings',
                 child: ListTile(
-                  leading: const Icon(Icons.settings),
-                  title: Text(l10n.settings),
+                  leading: Icon(Icons.settings, color: colorScheme.onSurface),
+                  title: Text(
+                    l10n.settings,
+                    style: TextStyle(color: colorScheme.onSurface),
+                  ),
                 ),
               ),
+              // --- ADDING ANOTHER DIVIDER ---
+              const PopupMenuDivider(),
+              // ------------------------------
               PopupMenuItem<String>(
                 value: 'logout',
                 child: ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: Text(l10n.logOut),
+                  leading: Icon(Icons.logout, color: colorScheme.onSurface),
+                  title: Text(
+                    l10n.logOut,
+                    style: TextStyle(color: colorScheme.onSurface),
+                  ),
                 ),
               ),
             ],

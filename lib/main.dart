@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/providers/destination_provider.dart';
+import 'package:traveller_app/screens/check_in.dart';
 import 'package:traveller_app/screens/main_screen.dart';
 import 'package:traveller_app/screens/signin.dart';
 import 'package:traveller_app/utils/theme.dart';
@@ -215,6 +216,9 @@ class MyAppState extends State<MyApp> {
                         initialNotifications: initialNotifications,
                       );
                     },
+                    '/checkin':
+                        (context) =>
+                            const CheckInPage(), // Added route for checkin
                   },
                 );
               } else if (snapshot.hasData) {
@@ -259,6 +263,9 @@ class MyAppState extends State<MyApp> {
                         initialNotifications: initialNotifications,
                       );
                     },
+                    '/checkin':
+                        (context) =>
+                            const CheckInPage(), // Added route for checkin
                   },
                 );
               } else {
@@ -295,6 +302,9 @@ class MyAppState extends State<MyApp> {
                         initialNotifications: initialNotifications,
                       );
                     },
+                    '/checkin':
+                        (context) =>
+                            const CheckInPage(), // Added route for checkin
                   },
                 );
               }
