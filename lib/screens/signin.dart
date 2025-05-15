@@ -47,6 +47,7 @@ class _SignInPageState extends State<SignInPage> {
   void handleLogin() async {
     // Use a local l10n instance for safety within async function
     // Check mounted early if needed
+    //this is necessary
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
 
