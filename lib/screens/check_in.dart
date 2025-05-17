@@ -8,7 +8,7 @@ class CheckInPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Check-In')),
-      body: const Center(child: Text('Check-In Page Content')),
+      body: const Center(child: Text('context Page')),
     );
   }
 }

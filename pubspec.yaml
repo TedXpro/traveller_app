@@ -32,8 +32,6 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  intl: any
-
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -43,7 +41,7 @@ dependencies:
   shared_preferences: ^2.0.15
   jwt_decoder: ^2.0.1
   provider: ^6.0.0
-  chapasdk: ^0.0.7+1
+  chapasdk: ^0.0.8+1
   location: ^8.0.0
   flutter_polyline_points: ^2.1.0
   google_maps_flutter: ^2.12.1
@@ -56,6 +54,7 @@ dependencies:
   firebase_core: ^3.13.0
   firebase_messaging: ^15.2.5
   bus_seat_plan: ^0.0.3
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +68,22 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   build_runner: ^2.4.4
   json_serializable: ^6.7.1
+  flutter_launcher_icons: "^0.13.1"
+
+# WARNING: Using dependency_overrides for core SDK transitive dependencies like intl
+# is NOT recommended for production and can cause instability or unexpected behavior.
+# Use this as a temporary workaround ONLY if you absolutely need chapasdk >= 0.0.8
+# and are blocked by the intl version conflict with your current Flutter SDK.
+dependency_overrides:
+  intl: ^0.20.2 # Force intl to a version compatible with chapasdk >= 0.0.8
+
+flutter_launcher_icons:
+  # Specify the path to your icon image
+  image_path: "assets/hawir_logo.png" # Replace with your actual path
+
+  # Set to true for the platforms you want to generate icons for
+  android: true
+  ios: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -4,52 +4,17 @@ part 'destination.g.dart';
 
 @JsonSerializable()
 class Destination {
+  
   @JsonKey(name: 'id')
-  String? id;
+  String? id; 
 
   @JsonKey(name: 'name')
-  String name;
+  String name; 
 
-  @JsonKey(name: 'latitude')
-  String latitude;
+  @JsonKey(name: 'stations')
+  List<String>? stations; 
 
-  @JsonKey(name: 'longitude')
-  String longitude;
-
-  @JsonKey(name: 'description')
-  String description;
-
-  @JsonKey(name: 'hotels')
-  List<List<Hotel>>? hotels;
-
-  @JsonKey(name: 'culture')
-  String culture;
-
-  @JsonKey(name: 'history')
-  String history;
-
-  @JsonKey(name: 'population')
-  String population;
-
-  @JsonKey(name: 'touristAttractions')
-  List<List<TouristAttraction>>? touristAttractions;
-
-  @JsonKey(name: 'post_date')
-  DateTime? postDate;
-
-  Destination({
-    this.id,
-    required this.name,
-    required this.latitude,
-    required this.longitude,
-    required this.description,
-    this.hotels,
-    required this.culture,
-    required this.history,
-    required this.population,
-    this.touristAttractions,
-    this.postDate,
-  });
+  Destination({this.id, required this.name, this.stations});
 
   factory Destination.fromJson(Map<String, dynamic> json) =>
       _$DestinationFromJson(json);
@@ -57,17 +22,72 @@ class Destination {
 }
 
 @JsonSerializable()
+class DestinationDetails {
+  @JsonKey(name: 'destination_id')
+  String? destinationId; 
+
+  @JsonKey(name: 'latitude')
+  String? latitude; 
+
+  @JsonKey(name: 'longitude')
+  String? longitude; 
+
+  @JsonKey(name: 'description')
+  String? description; 
+
+  @JsonKey(name: 'image') 
+  String? image; 
+
+  @JsonKey(name: 'hotels')
+  List<Hotel>? hotels; 
+
+  @JsonKey(name: 'culture')
+  String? culture; 
+
+  @JsonKey(name: 'history')
+  String? history; 
+
+  @JsonKey(name: 'tourist_attractions') 
+  List<TouristAttraction>? touristAttractions; 
+
+  @JsonKey(name: 'post_date')
+  DateTime? postDate; 
+
+  DestinationDetails({
+    this.destinationId,
+    this.latitude,
+    this.longitude,
+    this.description,
+    this.image,
+    this.hotels,
+    this.culture,
+    this.history,
+    this.touristAttractions,
+    this.postDate,
+  });
+
+  factory DestinationDetails.fromJson(Map<String, dynamic> json) =>
+      _$DestinationDetailsFromJson(json);
+  Map<String, dynamic> toJson() => _$DestinationDetailsToJson(this);
+}
+
+
+@JsonSerializable()
 class Hotel {
   @JsonKey(name: 'name')
-  String name;
+  String name; 
 
-  @JsonKey(name: 'imageUrl')
-  String imageUrl;
+  @JsonKey(name: 'image_url') 
+  String? imageUrl; 
 
-  @JsonKey(name: 'mapLink')
-  String mapLink;
+  @JsonKey(name: 'map_link') 
+  String? mapLink; 
 
-  Hotel({required this.name, required this.imageUrl, required this.mapLink});
+  Hotel({
+    required this.name,
+    this.imageUrl,
+    this.mapLink,
+  }); 
 
   factory Hotel.fromJson(Map<String, dynamic> json) => _$HotelFromJson(json);
   Map<String, dynamic> toJson() => _$HotelToJson(this);
@@ -76,18 +96,24 @@ class Hotel {
 @JsonSerializable()
 class TouristAttraction {
   @JsonKey(name: 'name')
-  String name;
+  String name; 
 
-  @JsonKey(name: 'desc')
-  String desc;
+  @JsonKey(name: 'desc') 
+  String desc; 
 
-  @JsonKey(name: 'imageUrl')
-  String imageUrl;
+  @JsonKey(name: 'image_url') 
+  String? imageUrl; 
+
+  @JsonKey(
+    name: 'map_link',
+  ) 
+  String? mapLink; 
 
   TouristAttraction({
     required this.name,
     required this.desc,
-    required this.imageUrl,
+    this.imageUrl,
+    this.mapLink, 
   });
 
   factory TouristAttraction.fromJson(Map<String, dynamic> json) =>

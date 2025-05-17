@@ -4,17 +4,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/providers/destination_provider.dart';
 import 'package:traveller_app/screens/main_screen.dart';
+import 'package:traveller_app/screens/payment_success.dart'; // Import the updated PaymentSuccessPage
 import 'package:traveller_app/screens/signin.dart';
 import 'package:traveller_app/utils/theme.dart';
 import 'package:traveller_app/providers/theme_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-// for kIsWeb
-// import 'package:firebase_core/firebase_core.dart'; // Import Firebase Core
-import 'package:firebase_messaging/firebase_messaging.dart'; // Import Firebase Messaging
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:traveller_app/screens/notification_screen.dart'; // Import your notification screen
+import 'package:traveller_app/screens/notification_screen.dart';
+import 'package:traveller_app/models/booking.dart'; // Import Booking model
 
 // Define the background message handler as a top-level function
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -28,14 +28,11 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // if (!kIsWeb) {
-  //   await dotenv.load(fileName: ".env"); // Load .env file here
-  // }
 
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Set up background message handler
+  // Set up background message handler (if needed)
   // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   // Request notification permissions (for iOS and Web)
@@ -83,8 +80,6 @@ class MyAppState extends State<MyApp> {
   }
 
   Future<void> setupInteractedMessage(BuildContext context) async {
-    // Get any messages which caused the application to open from
-    // a terminated state.
     RemoteMessage? initialMessage =
         await FirebaseMessaging.instance.getInitialMessage();
 
@@ -92,8 +87,6 @@ class MyAppState extends State<MyApp> {
       _handleMessage(context, initialMessage);
     }
 
-    // Also handle any interaction when the app is in the background via a
-    // Stream listener
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       _handleMessage(context, message);
     });
@@ -101,20 +94,17 @@ class MyAppState extends State<MyApp> {
 
   void _handleMessage(BuildContext context, RemoteMessage message) {
     if (message.notification != null || message.data.isNotEmpty) {
-      // Extract relevant notification data
       final notificationData = {
         'notification': message.notification?.toMap() ?? {},
         'data': message.data,
       };
-      // Navigate to the notification screen with the notification data
       navigatorKey.currentState?.pushNamed(
         '/notification',
         arguments: {
           'notifications': [notificationData],
-        }, // Pass as a list
+        },
       );
     } else {
-      // Navigate to the notification screen without specific data
       navigatorKey.currentState?.pushNamed('/notification');
     }
   }
@@ -125,22 +115,18 @@ class MyAppState extends State<MyApp> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
-    await themeProvider.loadThemeMode(); // Load theme mode
+    await themeProvider.loadThemeMode();
 
     if (token != null && token.isNotEmpty) {
-      await userProvider.loadUserData(); // Load user data
+      await userProvider.loadUserDataAndToken();
     }
 
-    // Initialize Firebase Messaging listeners here
     setupFirebaseMessagingListeners(context);
 
     return {'token': token, 'userDataLoaded': userProvider.userData != null};
   }
 
   void setupFirebaseMessagingListeners(BuildContext context) {
-    // FirebaseMessaging messaging = FirebaseMessaging.instance;
-
-    // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print('Got a message whilst in the foreground!');
       print('Message data: ${message.data}');
@@ -151,14 +137,11 @@ class MyAppState extends State<MyApp> {
         // TODO: Display the notification using a local notification plugin if needed
       }
     });
-
-    // The onMessageOpenedApp listener is now handled in setupInteractedMessage
   }
 
   @override
   void initState() {
     super.initState();
-    // Call setupInteractedMessage with the context
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setupInteractedMessage(context);
     });
@@ -187,10 +170,7 @@ class MyAppState extends State<MyApp> {
                     GlobalWidgetsLocalizations.delegate,
                     GlobalCupertinoLocalizations.delegate,
                   ],
-                  supportedLocales: [
-                    Locale('en'), // English
-                    Locale('am'), // Amharic
-                  ],
+                  supportedLocales: [Locale('en'), Locale('am')],
                   debugShowCheckedModeBanner: false,
                   home: Scaffold(
                     body: Center(child: CircularProgressIndicator()),
@@ -215,6 +195,39 @@ class MyAppState extends State<MyApp> {
                         initialNotifications: initialNotifications,
                       );
                     },
+                    '/payment_success': (context) {
+                      // Check if the arguments are a Booking object (from explicit navigation)
+                      final args = ModalRoute.of(context)?.settings.arguments;
+                      if (args is Booking) {
+                        print(
+                          'Navigated to /payment_success with Booking object.',
+                        );
+                        return PaymentSuccessPage(booking: args);
+                      }
+                      // Check if the arguments are a Map<String, dynamic> (from Chapa fallback)
+                      else if (args is Map<String, dynamic>) {
+                        print(
+                          'Navigated to /payment_success with Chapa response map.',
+                        );
+                        // Create a dummy Booking object or handle this case
+                        // This scenario implies the explicit navigation failed.
+                        // You might want to fetch the booking details here using the reference from the map,
+                        // or navigate to an error state, or show a generic success message.
+                        // For now, let's show an error indicating unexpected arguments.
+                        print(
+                          'Error: /payment_success route received Chapa map, but was expecting a Booking object.',
+                        );
+                        // You could potentially parse the map and fetch the booking here as a fallback
+                        // but the current PaymentSuccessPage is designed to receive a Booking object.
+                        // Returning MainScreen or an error page is a safer fallback if the expected Booking object is not received.
+                        return const MainScreen(); // Fallback to MainScreen
+                      }
+                      // Handle missing or incorrect arguments
+                      print(
+                        'Error: Missing or incorrect arguments for /payment_success route. Expected Booking object or Chapa Map, got $args',
+                      );
+                      return const MainScreen(); // Fallback to MainScreen
+                    },
                   },
                 );
               } else if (snapshot.hasData) {
@@ -233,10 +246,7 @@ class MyAppState extends State<MyApp> {
                     GlobalWidgetsLocalizations.delegate,
                     GlobalCupertinoLocalizations.delegate,
                   ],
-                  supportedLocales: [
-                    Locale('en'), // English
-                    Locale('am'), // Amharic
-                  ],
+                  supportedLocales: [Locale('en'), Locale('am')],
                   debugShowCheckedModeBanner: false,
                   home: initialScreen,
                   theme: lightTheme,
@@ -259,6 +269,31 @@ class MyAppState extends State<MyApp> {
                         initialNotifications: initialNotifications,
                       );
                     },
+                    '/payment_success': (context) {
+                      // Check if the arguments are a Booking object (from explicit navigation)
+                      final args = ModalRoute.of(context)?.settings.arguments;
+                      if (args is Booking) {
+                        print(
+                          'Navigated to /payment_success with Booking object.',
+                        );
+                        return PaymentSuccessPage(booking: args);
+                      }
+                      // Check if the arguments are a Map<String, dynamic> (from Chapa fallback)
+                      else if (args is Map<String, dynamic>) {
+                        print(
+                          'Navigated to /payment_success with Chapa response map.',
+                        );
+                        print(
+                          'Error: /payment_success route received Chapa map, but was expecting a Booking object.',
+                        );
+                        return const MainScreen(); // Fallback to MainScreen
+                      }
+                      // Handle missing or incorrect arguments
+                      print(
+                        'Error: Missing or incorrect arguments for /payment_success route. Expected Booking object or Chapa Map, got $args',
+                      );
+                      return const MainScreen(); // Fallback to MainScreen
+                    },
                   },
                 );
               } else {
@@ -269,10 +304,7 @@ class MyAppState extends State<MyApp> {
                     GlobalWidgetsLocalizations.delegate,
                     GlobalCupertinoLocalizations.delegate,
                   ],
-                  supportedLocales: [
-                    Locale('en'), // English
-                    Locale('am'), // Amharic
-                  ],
+                  supportedLocales: [Locale('en'), Locale('am')],
                   debugShowCheckedModeBanner: false,
                   home: const SignInPage(),
                   theme: lightTheme,
@@ -294,6 +326,39 @@ class MyAppState extends State<MyApp> {
                       return NotificationScreen(
                         initialNotifications: initialNotifications,
                       );
+                    },
+                    '/payment_success': (context) {
+                      // Check if the arguments are a Booking object (from explicit navigation)
+                      final args = ModalRoute.of(context)?.settings.arguments;
+                      if (args is Booking) {
+                        print(
+                          'Navigated to /payment_success with Booking object.',
+                        );
+                        return PaymentSuccessPage(booking: args);
+                      }
+                      // Check if the arguments are a Map<String, dynamic> (from Chapa fallback)
+                      else if (args is Map<String, dynamic>) {
+                        print(
+                          'Navigated to /payment_success with Chapa response map.',
+                        );
+                        // Create a dummy Booking object or handle this case
+                        // This scenario implies the explicit navigation failed.
+                        // You might want to fetch the booking details here using the reference from the map,
+                        // or navigate to an error state, or show a generic success message.
+                        // For now, let's show an error indicating unexpected arguments.
+                        print(
+                          'Error: /payment_success route received Chapa map, but was expecting a Booking object.',
+                        );
+                        // You could potentially parse the map and fetch the booking here as a fallback
+                        // but the current PaymentSuccessPage is designed to receive a Booking object.
+                        // Returning MainScreen or an error page is a safer fallback if the expected Booking object is not received.
+                        return const MainScreen(); // Fallback to MainScreen
+                      }
+                      // Handle missing or incorrect arguments
+                      print(
+                        'Error: Missing or incorrect arguments for /payment_success route. Expected Booking object or Chapa Map, got $args',
+                      );
+                      return const MainScreen(); // Fallback to MainScreen
                     },
                   },
                 );

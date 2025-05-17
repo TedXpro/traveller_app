@@ -15,6 +15,7 @@ class CustomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
     return BottomNavigationBar(
       items: <BottomNavigationBarItem>[
         BottomNavigationBarItem(icon: const Icon(Icons.home), label: l10n.home),
@@ -26,8 +27,6 @@ class CustomNavBar extends StatelessWidget {
         BottomNavigationBarItem(icon: Icon(Icons.person), label: l10n.profile),
       ],
       currentIndex: selectedIndex,
-      selectedItemColor: Colors.blue,
-      unselectedItemColor: Colors.grey,
       onTap: onItemTapped,
     );
   }
