@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:traveller_app/providers/user_provider.dart';
-import 'package:traveller_app/screens/edit_profile.dart';
+import 'package:traveller_app/screens/edit_profile.dart'; // Assuming EditProfilePage is here
 import 'package:traveller_app/screens/settings.dart'; // Import SettingsPage
-import 'package:traveller_app/screens/signin.dart';
+import 'package:traveller_app/screens/signin.dart'; // Assuming SignInPage is here
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -14,7 +14,10 @@ class ProfilePage extends StatelessWidget {
     // Check mounted before using context after an await
     if (!context.mounted) return;
 
-    await Provider.of<UserProvider>(context, listen: false).clearUserData();
+    await Provider.of<UserProvider>(
+      context,
+      listen: false,
+    ).clearUserDataAndToken();
 
     // Check mounted again before navigating
     if (!context.mounted) return;
@@ -39,7 +42,7 @@ class ProfilePage extends StatelessWidget {
             // Use theme's text style for loading/error messages
             return Center(
               child: Text(
-                'User data not loaded.',
+                'User data not loaded.', // Consider localizing this
                 style: theme.textTheme.bodyMedium,
               ),
             );
@@ -59,18 +62,33 @@ class ProfilePage extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      // CircleAvatar styling can be themed or set explicitly
+                      // --- START: Profile Picture Display ---
                       CircleAvatar(
-                        radius: 40, // Slightly smaller radius for better fit
+                        radius: 40,
                         backgroundColor:
                             colorScheme
                                 .onPrimary, // Contrasting color for avatar background
-                        child: Icon(
-                          Icons.person,
-                          size: 40,
-                          color: colorScheme.primary,
-                        ), // Icon color contrasts with avatar background
+                        // Use NetworkImage if profilePhoto is available, otherwise null
+                        backgroundImage:
+                            (user.profilePhoto != null &&
+                                    user.profilePhoto!.isNotEmpty)
+                                ? NetworkImage(user.profilePhoto!)
+                                    as ImageProvider<Object>?
+                                : null, // No background image if no photo URL
+                        // Show default icon only if no profile photo is available
+                        child:
+                            (user.profilePhoto == null ||
+                                    user.profilePhoto!.isEmpty)
+                                ? Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color:
+                                      colorScheme
+                                          .primary, // Icon color contrasts with avatar background
+                                )
+                                : null, // No child if there's a background image
                       ),
+                      // --- END: Profile Picture Display ---
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -166,11 +184,7 @@ class ProfilePage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: ElevatedButton(
         onPressed: onPressed,
-        // ElevatedButton style will pick up theme.elevatedButtonTheme automatically
-        // Keep minimumSize and shape if you want to override the theme defaults for these
         style: ElevatedButton.styleFrom(
-          // Removed hardcoded padding to rely on theme or minimumSize
-          // padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           minimumSize: const Size(
             double.infinity,
             50,
@@ -179,14 +193,9 @@ class ProfilePage extends StatelessWidget {
             // Keep custom shape if desired
             borderRadius: BorderRadius.circular(12),
           ),
-          // Background and foreground colors will come from theme.elevatedButtonTheme
-          // unless explicitly set here. Removing them lets the theme apply.
-          // backgroundColor: theme.elevatedButtonTheme.style?.backgroundColor?.resolve({}),
-          // foregroundColor: theme.elevatedButtonTheme.style?.foregroundColor?.resolve({}),
         ),
         child: Row(
           children: [
-            // Use theme's color for the icon, contrasting with button background
             Icon(
               icon,
               color: colorScheme.onPrimary,

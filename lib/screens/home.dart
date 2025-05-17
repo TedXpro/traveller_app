@@ -29,15 +29,10 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // Access theme data for context-specific colors/styles if needed for complex cases
-    // final theme = Theme.of(context);
 
     return Scaffold(
-      // Scaffold background will be from the theme, but your Stack covers it.
       body: Stack(
         children: [
-          // Background Image - This will cover the Scaffold's background color.
-          // If you want the theme's background color visible, this needs to be conditional or transparent.
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -72,10 +67,6 @@ class _HomePageState extends State<HomePage> {
         return Text(
           l10n.welcome(userName),
           style: theme.textTheme.titleLarge?.copyWith(
-            // Use a theme text style
-            // fontWeight: FontWeight.bold, // titleLarge is already bold by theme
-            // If you need to override only specific parts of the theme's text style:
-            // color: theme.textTheme.titleLarge?.color?.withOpacity(0.9)
           ),
         );
       },
@@ -83,11 +74,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildTripCard(AppLocalizations l10n, BuildContext context) {
-    // The Card widget will now use cardTheme from your ThemeData
-    // If you removed local elevation and shape from Card, it will use theme's
     return Card(
-      // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), // Keep if specific, or remove to use cardTheme.shape
-      // elevation: 5, // Keep if specific, or remove to use cardTheme.elevation (which is 0 in your darkTheme)
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -150,13 +137,11 @@ class _HomePageState extends State<HomePage> {
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                // Use theme color for border
                 border: Border.all(
                   color: theme.colorScheme.outline.withOpacity(0.5),
                 ),
               ),
               padding: const EdgeInsets.all(8.0),
-              // Icon color will be inherited from IconTheme
               child: Icon(Icons.swap_vert, color: theme.iconTheme.color),
             ),
           ),
@@ -187,30 +172,20 @@ class _HomePageState extends State<HomePage> {
     String? errorText,
     required BuildContext context, // Added context
   }) {
-    // DropdownButtonFormField will use dropdownMenuTheme.inputDecorationTheme or inputDecorationTheme
-    // The InputDecoration provided here can override parts of it.
-    // For full theme application, define less in the local InputDecoration.
     return DropdownButtonFormField<String>(
       value: value,
-      // The decoration here will merge with or override the theme's inputDecorationTheme.
-      // To fully use the theme, you might remove local `border` if the theme provides it sufficiently.
       decoration: InputDecoration(
         labelText: label,
-        // border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)), // This overrides theme's border style if uncommented
         errorText: errorText,
-        // Other properties like fillColor, hintStyle, labelStyle will come from the theme
-        // if not specified here.
       ),
       items:
           items.map((destination) {
             return DropdownMenuItem<String>(
               value: destination.name,
-              // Text style within dropdown items will also try to inherit
               child: Text(destination.name),
             );
           }).toList(),
       onChanged: onChanged,
-      // dropdownColor: Theme.of(context).cardColor, // Example: explicit dropdown background
     );
   }
 

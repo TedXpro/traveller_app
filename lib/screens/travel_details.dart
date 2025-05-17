@@ -1,3 +1,4 @@
+// Import for json.decode
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:traveller_app/models/booking.dart';
@@ -6,7 +7,7 @@ import 'package:traveller_app/models/travel.dart';
 import 'package:traveller_app/models/agency.dart';
 import 'package:traveller_app/screens/booking_confirmation.dart';
 import 'package:traveller_app/services/agency_api_services.dart';
-import 'package:traveller_app/services/booking_api_services.dart';
+import 'package:traveller_app/services/booking_api_services.dart'; // Assuming this is your BookingServices file
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -24,27 +25,29 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
   String agencyName = 'Loading...';
   final AgencyServices _agencyServices = AgencyServices();
   final Map<String, Agency> _agencyCache = {};
-  final BookingServices _bookingServices = BookingServices();
-  List<int> takenSeats = [];
-  int? selectedSeat;
-
-  // Consider adding a loading state variable if fetching data takes time
-  // bool _isLoadingAgency = true;
+  final BookingServices _bookingServices =
+      BookingServices(); // Use your BookingServices
+  List<bool> seatStatusBooleans = []; // Store the raw boolean list from backend
+  // Removed takenSeats list as we are now using the boolean list directly for display
+  // List<int> takenSeats = []; // Store the list of taken seat numbers (1-based)
+  int? selectedSeat; // Store the 0-based index of the selected seat
+  bool _isLoadingSeats = true; // Loading state for fetching taken seats
+  bool _isBooking = false; // Loading state for the booking process
 
   @override
   void initState() {
     super.initState();
     _fetchAgencyName();
-    // TODO: Also fetch taken seats for this travel if implementing seat selection
+    _fetchTakenSeats(); // Fetch taken seats when the page initializes
   }
 
   Future<void> _fetchAgencyName() async {
-    // setState(() { _isLoadingAgency = true; }); // Example loading state update
     if (_agencyCache.containsKey(widget.travel.agencyId)) {
-      setState(() {
-        agencyName = _agencyCache[widget.travel.agencyId]!.name;
-        // _isLoadingAgency = false; // Example loading state update
-      });
+      if (mounted) {
+        setState(() {
+          agencyName = _agencyCache[widget.travel.agencyId]!.name;
+        });
+      }
       return;
     }
 
@@ -52,133 +55,275 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       Agency? agency = await _agencyServices.fetchAgencyApi(
         widget.travel.agencyId,
       );
-      if (agency != null) {
-        setState(() {
-          agencyName = agency.name;
-          _agencyCache[widget.travel.agencyId] = agency;
-          // _isLoadingAgency = false; // Example loading state update
-        });
-      } else {
-        setState(() {
-          agencyName = AppLocalizations.of(context)!.agencyNotFound;
-          // _isLoadingAgency = false; // Example loading state update
-        });
+      if (mounted) {
+        if (agency != null) {
+          setState(() {
+            agencyName = agency.name;
+            _agencyCache[widget.travel.agencyId] = agency;
+          });
+        } else {
+          setState(() {
+            agencyName = AppLocalizations.of(context)!.agencyNotFound;
+          });
+        }
       }
     } catch (e) {
       print('Error fetching agency: $e');
+      if (mounted) {
+        setState(() {
+          agencyName = AppLocalizations.of(context)!.errorLoadingAgency;
+        });
+      }
+    }
+  }
+
+  // Method to fetch seat status from backend and update state
+  Future<void> _fetchTakenSeats() async {
+    if (mounted) {
       setState(() {
-        agencyName = AppLocalizations.of(context)!.errorLoadingAgency;
-        // _isLoadingAgency = false; // Example loading state update
+        _isLoadingSeats = true; // Set loading state
       });
+    }
+    try {
+      // Call the BookingServices method which now returns List<bool>
+      final fetchedSeatStatus = await _bookingServices.fetchTakenSeats(
+        widget.travel.id,
+      );
+
+      if (mounted) {
+        setState(() {
+          seatStatusBooleans = fetchedSeatStatus; // Store the boolean list
+          _isLoadingSeats = false; // Clear loading state on success
+        });
+      }
+    } catch (e) {
+      print('Error fetching taken seats: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingSeats = false; // Clear loading state on error
+          // Optionally show an error message to the user
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(
+                  context,
+                )!.paymentError('Failed to load taken seats.'),
+              ), // Reusing paymentError key for a generic error message
+              backgroundColor: Colors.red,
+            ),
+          );
+        });
+      }
     }
   }
 
   Future<void> _bookTravel() async {
-    // TODO: Implement actual seat selection logic before booking
+    // selectedSeat now holds the 0-based index
     if (selectedSeat == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.pleaseSelectSeat,
-          ), // Add this localization key
-        ),
+        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSelectSeat)),
       );
-      return; // Prevent booking if no seat is selected
+      return;
     }
 
-    try {
-      // Ensure user data is loaded and accessible
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      // Check if user data is available before attempting to get ID
-      String travelerId =
-          userProvider.userData?.id ??
-          'anonymous'; // Use a fallback like 'anonymous' or handle error
-      if (travelerId == 'anonymous') {
-        // Show error or navigate to login if user is required
+    // Ensure user data is loaded and accessible
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    String? travelerId = userProvider.userData?.id;
+
+    if (travelerId == null) {
+      // Show error or navigate to login if user is required
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.loginRequiredForBooking),
+        ),
+      );
+      // TODO: Optionally navigate to login page
+      return;
+    }
+
+    // Prevent multiple booking attempts
+    if (_isBooking) {
+      return;
+    }
+
+    // Check if the selected seat (using 0-based index) is already taken
+    if (selectedSeat! >= 0 &&
+        selectedSeat! < seatStatusBooleans.length &&
+        seatStatusBooleans[selectedSeat!]) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.loginRequiredForBooking,
-            ), // Add this localization key
+              // Display 1-based seat number in the message
+              AppLocalizations.of(
+                context,
+              )!.paymentError('Seat ${selectedSeat! + 1} is already taken.'),
+            ), // Use a localized message
+            backgroundColor: Colors.orange, // Indicate a warning/info
           ),
         );
-        return;
       }
+      // Re-fetch taken seats to ensure UI is up-to-date
+      _fetchTakenSeats();
+      return; // Stop the booking process if the seat is taken
+    }
+    // --- End check for already taken seats ---
 
-      String paymentRef =
-          'temp_payment_ref_${DateTime.now().millisecondsSinceEpoch}';
-      DateTime now = DateTime.now().toUtc();
-      DateTime bookTimeLimit = now.add(const Duration(minutes: 30));
-
-      // Only choose seat if it's not already taken (requires fetching taken seats)
-      // if (takenSeats.contains(selectedSeat!)) {
-      //    ScaffoldMessenger.of(context).showSnackBar(
-      //      SnackBar(
-      //        content: Text(l10n.seatAlreadyTaken), // Add localization
-      //      ),
-      //    );
-      //    return;
-      // }
-
-      // Call chooseSeat with the selectedSeat
-      Seat seat = Seat(
-        travelId: widget.travel.id,
-        travelerId: travelerId,
-        seatNo: selectedSeat!, // Use the selected seat
-        maxTime: bookTimeLimit,
-      );
-
-      await _bookingServices.chooseSeat(seat);
-      print(
-        AppLocalizations.of(context)!.seatChosen(selectedSeat!),
-      ); // Use selected seat in message
-
-      // Note: You are creating a Booking object here and navigating to confirmation,
-      // but the await _bookingServices.book(booking) line is commented out.
-      // Ensure you call the book API or handle the booking finalization later.
-      Booking booking = Booking(
-        travelId: widget.travel.id,
-        travelerId: travelerId,
-        seatNo: selectedSeat!, // Use the selected seat
-        tripType: 'One-way', // This is hardcoded, might need to be dynamic
-        startLocation: widget.travel.startLocation,
-        paymentType: widget.travel.price,
-        paymentRef: paymentRef,
-        bookTime: DateTime.now().toUtc(),
-        payTime:
-            DateTime.now().toUtc(), // Pay time is usually later than book time
-        bookTimeLimit: bookTimeLimit,
-        status: 'Pending',
-      );
-
-      print(booking.toJson());
-      print(AppLocalizations.of(context)!.bookingTravel);
-
-      // Consider uncommenting the booking API call or handling booking finalization
-      // await _bookingServices.book(booking);
-
-      // Navigate to the confirmation page
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => BookingConfirmationPage(booking: booking),
-        ),
-      );
-    } catch (e) {
+    if (mounted) {
+      setState(() {
+        _isBooking = true; // Set booking loading state
+      });
+      // Show a loading indicator or message for the booking process
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.failedToBookTravel(e.toString()),
-          ),
+          content: Text(AppLocalizations.of(context)!.bookingTravel),
+          duration: const Duration(
+            seconds: 30,
+          ), // Show for a reasonable duration
         ),
       );
+    }
+
+    try {
+      DateTime now = DateTime.now().toUtc();
+      DateTime bookTimeLimit = now.add(
+        const Duration(minutes: 30),
+      ); // Match backend reservation span
+
+      // 1. Call the chooseSeat API
+      Seat seatToChoose = Seat(
+        travelId: widget.travel.id,
+        travelerId: travelerId,
+        seatNo: selectedSeat!, // Use the 0-based selectedSeat index
+        maxTime: bookTimeLimit, // Pass the same time limit
+      );
+
+      bool seatChosenSuccess = await _bookingServices.chooseSeat(seatToChoose);
+
+      if (!seatChosenSuccess) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).hideCurrentSnackBar(); // Hide booking loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(
+                  context,
+                )!.paymentError('Failed to choose seat. It might be taken.'),
+              ), // Generic error for now
+              backgroundColor: Colors.red,
+            ),
+          );
+          setState(() {
+            _isBooking = false;
+          }); // Clear booking loading state
+        }
+        _fetchTakenSeats(); // Re-fetch seats to show updated status
+        return; // Stop if choosing seat failed
+      }
+
+      // If chooseSeat is successful, proceed to bookTravel
+      Booking bookingToBook = Booking(
+        id: '', // Backend will generate ID
+        bookingRef: '', // Backend will generate bookingRef
+        travelId: widget.travel.id,
+        travelerId: travelerId,
+        seatNo: selectedSeat!, // Use the 0-based selectedSeat index
+        tripType: 'One-way', // Assuming 'One-way' for now
+        startLocation: widget.travel.startLocation,
+        price: widget.travel.price,
+        bookTime: now,
+        payTime: null,
+        bookTimeLimit: bookTimeLimit,
+        status: 'pending', // Initial status
+      );
+
+      print(
+        "Attempting to book travel with details: ${bookingToBook.toJson()}",
+      );
+      // The bookTravel method should return the created Booking object from the backend
+      Booking? createdBooking = await _bookingServices.bookTravel(
+        bookingToBook,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).hideCurrentSnackBar(); // Hide booking loading
+        setState(() {
+          _isBooking = false;
+        }); // Clear booking loading state
+      }
+
+      if (createdBooking != null) {
+        print("Booking created successfully: ${createdBooking.toJson()}");
+        // Booking successful, navigate to confirmation page with the created booking
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                // Display 1-based seat number in success message
+                AppLocalizations.of(context)!.seatChosen(selectedSeat! + 1),
+              ), // Use selected seat in message
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) => BookingConfirmationPage(
+                    booking: createdBooking,
+                  ), // Pass the created booking
+            ),
+          );
+        }
+      } else {
+        // Booking failed
+        print("Booking API returned null after chooseSeat was successful.");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.failedToBookTravel(
+                  'Booking API returned null.',
+                ), // Generic error
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+          // Consider re-fetching taken seats as the seat might not be booked
+          _fetchTakenSeats();
+        }
+      }
+    } catch (e) {
+      print('Error during booking process: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).hideCurrentSnackBar(); // Hide booking loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.failedToBookTravel(e.toString()),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isBooking = false;
+        }); // Clear booking loading state
+        // Consider re-fetching taken seats on error
+        _fetchTakenSeats();
+      }
     }
   }
 
   // Widget to build a simple representation of a seat
   Widget _buildSeat(
-    int seatNumber,
-    bool isTaken,
+    int seatIndex, // 0-based index
+    bool isTaken, // Now directly passed from the boolean list
     bool isSelected,
     ColorScheme colorScheme,
   ) {
@@ -187,9 +332,10 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
     Color borderColor;
 
     if (isTaken) {
-      backgroundColor = Colors.grey; // Use a grey for taken seats
-      textColor = Colors.black54;
-      borderColor = Colors.grey[700]!;
+      // Highlight taken seats with a light grey/white color
+      backgroundColor = Colors.grey[300]!; // Light grey background
+      textColor = Colors.black54; // Darker text for readability
+      borderColor = Colors.grey[400]!; // Slightly darker border
     } else if (isSelected) {
       // Use the primary color from the theme for selected seats
       backgroundColor = colorScheme.primary;
@@ -197,67 +343,167 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       borderColor = colorScheme.primaryContainer; // A related color for border
     } else {
       // Use surface or card color for available seats
-      backgroundColor =
-          colorScheme.surface; // Or colorScheme.cardColor if defined
+      backgroundColor = colorScheme.surface; // Use theme's surface color
       textColor = colorScheme.onSurface; // Color that contrasts with surface
-      borderColor = colorScheme.onSurface.withOpacity(
+      borderColor = colorScheme.outline.withOpacity(
         0.5,
-      ); // Subtle border for available
+      ); // Lighter outline for available
     }
 
     return InkWell(
       onTap:
-          isTaken
+          isTaken ||
+                  _isBooking // Disable tapping if taken or booking is in progress
               ? null
               : () {
                 setState(() {
+                  // Toggle selection: if this seat is already selected, deselect it
                   selectedSeat =
-                      isSelected
-                          ? null
-                          : seatNumber; // Deselect if already selected
+                      isSelected ? null : seatIndex; // Store 0-based index
                 });
               },
       child: Container(
-        width: 40, // Adjust size as needed
+        width: 35, // Smaller seat size
         height: 40, // Adjust size as needed
+        margin: const EdgeInsets.all(4), // Add some margin around seats
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(8), // Rounded corners for seats
           border: Border.all(color: borderColor, width: 1),
+          boxShadow:
+              isSelected && !isTaken && !_isBooking
+                  ? [
+                    // Add a subtle shadow to selected seats
+                    BoxShadow(
+                      color: colorScheme.primary.withOpacity(0.5),
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                  : null,
         ),
         child: Text(
-          seatNumber.toString(),
+          (seatIndex).toString(), // Display 0-based index
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
 
-  // Widget to build the seat layout (basic grid example)
-  Widget _buildSeatLayout(ColorScheme colorScheme) {
-    // This is a simplified example. You might need a more complex layout
-    // depending on the actual bus/vehicle seat arrangement.
-    const int seatsPerRow = 4; // Example: 2+2 arrangement
-    const int totalSeats = 40; // Example total number of seats
+  // Widget to build the bus seat layout
+  Widget _buildBusSeatLayout(ColorScheme colorScheme) {
+    // Use the length of the boolean list for the total number of seats
+    final int totalSeats = seatStatusBooleans.length;
+    final l10n = AppLocalizations.of(context)!;
 
-    return GridView.builder(
-      shrinkWrap: true, // Important for placing inside Column
-      physics:
-          const NeverScrollableScrollPhysics(), // To prevent scrolling within the column
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: seatsPerRow,
-        crossAxisSpacing: 12.0, // Spacing between seats horizontally
-        mainAxisSpacing: 12.0, // Spacing between seats vertically
-        childAspectRatio: 1.0, // Make seats square
+    if (_isLoadingSeats) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      ); // Show loading indicator while fetching seats
+    }
+
+    // Handle the case where no seat data is loaded yet
+    if (totalSeats == 0) {
+      return Center(
+        child: Text(
+          AppLocalizations.of(context)!.paymentError('No seat data available.'),
+        ), // Localized message
+      );
+    }
+
+    List<Widget> rows = [];
+
+    // Add driver position row
+    rows.add(
+      Align(
+        alignment: Alignment.centerRight,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 20.0, bottom: 10.0),
+          child: Text(
+            l10n.driver,
+            style: Theme.of(context).textTheme.bodySmall,
+          ), // Localize "Driver"
+        ),
       ),
-      itemCount: totalSeats,
-      itemBuilder: (context, index) {
-        final seatNumber = index + 1; // Seat numbers usually start from 1
-        final isTaken = takenSeats.contains(seatNumber);
-        final isSelected = selectedSeat == seatNumber;
-        return _buildSeat(seatNumber, isTaken, isSelected, colorScheme);
-      },
+    );
+
+    // Build rows with 2-2 layout for most seats
+    // We iterate in steps of 4 for the 2-2 rows
+    for (
+      int i = 0;
+      i <
+          totalSeats -
+              (totalSeats % 4 == 0 && totalSeats > 0 ? 4 : totalSeats % 4);
+      i += 4
+    ) {
+      rows.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center, // Center the row
+          children: [
+            _buildSeat(
+              i,
+              seatStatusBooleans[i],
+              selectedSeat == i,
+              colorScheme,
+            ),
+            _buildSeat(
+              i + 1,
+              seatStatusBooleans[i + 1],
+              selectedSeat == i + 1,
+              colorScheme,
+            ),
+            const SizedBox(
+              width: 30,
+            ), // Aisle space (increased for better visual)
+            _buildSeat(
+              i + 2,
+              seatStatusBooleans[i + 2],
+              selectedSeat == i + 2,
+              colorScheme,
+            ),
+            _buildSeat(
+              i + 3,
+              seatStatusBooleans[i + 3],
+              selectedSeat == i + 3,
+              colorScheme,
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Handle the last row (can have 1, 2, 3, or 4 seats together)
+    int startIndexLastRow =
+        totalSeats -
+        (totalSeats % 4 == 0 && totalSeats > 0 ? 4 : totalSeats % 4);
+    int remainingSeats = totalSeats - startIndexLastRow;
+
+    if (remainingSeats > 0) {
+      List<Widget> lastRowSeats = [];
+      for (int i = startIndexLastRow; i < totalSeats; i++) {
+        lastRowSeats.add(
+          _buildSeat(i, seatStatusBooleans[i], selectedSeat == i, colorScheme),
+        );
+      }
+      rows.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center, // Center the row
+          children: lastRowSeats,
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        border: Border.all(color: colorScheme.outline.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch, // Stretch to fill width
+        children: rows,
+      ),
     );
   }
 
@@ -320,7 +566,7 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
                     _buildDetailRow(
                       l10n.departure,
                       DateFormat(
-                        'MMM d, yyyy HH:mm', // Corrected date format pattern
+                        'MMM d, BBBB HH:mm', // Corrected date format pattern
                       ).format(widget.travel.plannedStartTime),
                       theme, // Pass theme
                     ),
@@ -328,7 +574,7 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
                       l10n.arrival,
                       widget.travel.estArrivalTime != null
                           ? DateFormat(
-                            'MMM d, yyyy HH:mm', // Corrected date format pattern
+                            'MMM d, BBBB HH:mm', // Corrected date format pattern
                           ).format(widget.travel.estArrivalTime!)
                           : l10n.notAvailable,
                       theme, // Pass theme
@@ -351,8 +597,8 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
             ),
             const SizedBox(height: 16),
 
-            // Display the seat layout
-            _buildSeatLayout(colorScheme),
+            // Display the bus seat layout
+            _buildBusSeatLayout(colorScheme),
 
             const SizedBox(height: 20),
 
@@ -360,12 +606,25 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
               // ElevatedButton styling will pick up theme.elevatedButtonTheme automatically
               child: ElevatedButton(
                 onPressed:
-                    selectedSeat == null
+                    selectedSeat == null ||
+                            _isBooking // Disable if no seat selected or booking in progress
                         ? null
                         : _bookTravel, // Disable if no seat selected
                 // Removed hardcoded style to use theme.elevatedButtonTheme
                 // style: ElevatedButton.styleFrom(...),
-                child: Text(l10n.bookNow),
+                child:
+                    _isBooking // Show loading indicator on button if booking
+                        ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color:
+                                colorScheme
+                                    .onPrimary, // Match button text color
+                            strokeWidth: 3,
+                          ),
+                        )
+                        : Text(l10n.bookNow),
               ),
             ),
           ],

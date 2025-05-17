@@ -123,5 +123,42 @@
   "paymentError": "የክፍያ ስህተት: {error}",
   "loginRequiredForPayment": "ለመክፈል መግባት ያስፈልጋል",
   "payButtonLabel": "አሁን ይክፈሉ",
-  "backToBookings": "ወደ ቦታ ማስያዝ ይመለሱ"
+  "backToBookings": "ወደ ቦታ ማስያዝ ይመለሱ",
+  "paymentSuccessTitle": "ክፍያ ስኬታማ",
+  "@paymentSuccessTitle": {
+    "description": "Title of the payment success page."
+  },
+  "paymentSuccessfulMessage": "ክፍያዎ በተሳካ ሁኔታ ተከናውኗል!",
+  "@paymentSuccessfulMessage": {
+    "description": "Message shown to the user after a successful payment transaction."
+  },
+  "goToHome": "ወደ መነሻ ሂድ",
+  "@goToHome": {
+    "description": "Label for the button to navigate to the home screen after successful payment."
+  },
+  "pleaseEnterPhoneNumber": "እባክዎ ስልክ ቁጥርዎን ያስገቡ።",
+  "savingChanges": "ለውጦችን በማስቀመጥ ላይ...",
+  "loginRequiredForSavingProfile": "የመገለጫ ለውጦችን ለማስቀመጥ መግባት ያስፈልጋል።",
+  "profileUpdatedSuccessfully": "መገለጫ በተሳካ ሁኔታ ተዘምኗል!",
+  "failedToUpdateProfile": "መገለጫውን ማዘመን አልተሳካም: {errorMessage}",
+  "pleaseFillAllPasswordFields": "እባክዎ ሁሉንም የይለፍ ቃል መስኮች ይሙሉ::",
+  "changingPassword": "የይለፍ ቃል በመቀየር ላይ...",
+  "loginRequiredForPasswordChange": "የይለፍ ቃል ለመቀየር መግባት ያስፈልጋል።",
+  "passwordChangedSuccessfully": "የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል!",
+  "failedToChangePassword": "የይለፍ ቃል መቀየር አልተሳካም: {errorMessage}",
+  "bookingReference": "የቦታ ማስያዣ መለያ ቁጥር",
+  "loginRequiredForBookingDetails": "የቦታ ማስያዣ ዝርዝሮችን ለማየት መግባት ያስፈልጋል።",
+  "paymentStatusTitle": "የክፍያ ሁኔታ",
+  "retry": "እንደገና ይሞክሩ",
+  "backToHome": "ወደ መነሻ ገጽ ይመለሱ",
+  "myBookingsTitle": "የእኔ ቦታ ማስያዣዎች",
+"noBookingsFound": "ምንም ቦታ ማስያዣ አልተገኘም",
+"bookedOn": "የተያዘበት ቀን",
+"from": "ከ",
+"gallery": "ጋለሪ",
+"camera": "ካሜራ",
+"imageSelected": "ምስል በተሳካ ሁኔታ ተመርጧል።",
+"failedToPickImage": "ምስል መምረጥ አልተቻለም: {errorMessage}",
+"failedToUploadImage": "ምስል መስቀል አልተቻለም።",
+"failedToUploadImageParam": "ምስል መስቀል አልተቻለም: {errorMessage}"
 }

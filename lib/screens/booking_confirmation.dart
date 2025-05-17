@@ -1,19 +1,32 @@
 // booking_confirmation_page.dart
-import 'package:flutter/material.dart';
-import 'package:traveller_app/models/booking.dart'; // Assuming Booking model is correctly defined
-import 'package:intl/intl.dart'; // For date formatting
-import 'package:chapasdk/chapasdk.dart'; // For Chapa payment integration
-import 'package:provider/provider.dart'; // For accessing UserProvider
-import 'package:traveller_app/providers/user_provider.dart'; // Assuming you have this provider
-import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
-import 'package:traveller_app/screens/main_screen.dart'; // Import MainScreen for navigation
+// Description: This page displays booking details and initiates the Chapa payment process.
+// After payment completion, it calls the backend to update the booking status
+// and explicitly navigates to the payment success page with the updated booking details.
 
-class BookingConfirmationPage extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:traveller_app/models/booking.dart';
+import 'package:intl/intl.dart';
+import 'package:chapasdk/chapasdk.dart';
+import 'package:traveller_app/providers/user_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:traveller_app/screens/main_screen.dart';
+import 'package:traveller_app/screens/payment_success.dart'; // Import PaymentSuccessPage
+import 'package:traveller_app/services/booking_api_services.dart'; // Import BookingServices
+import 'package:traveller_app/models/booking_status.dart'; // Import BookingStatus model
+
+class BookingConfirmationPage extends StatefulWidget {
   final Booking booking;
 
   const BookingConfirmationPage({super.key, required this.booking});
 
-  // Helper to build detail rows (similar to BookingDetailsPage)
+  @override
+  _BookingConfirmationPageState createState() =>
+      _BookingConfirmationPageState();
+}
+
+class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
+  // Helper to build detail rows
   Widget _buildDetailRow(String label, String value, ThemeData theme) {
     final colorScheme = theme.colorScheme;
     return Padding(
@@ -46,76 +59,62 @@ class BookingConfirmationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!; // Get AppLocalizations instance
-    final theme = Theme.of(context); // Access the current theme
-    final colorScheme = theme.colorScheme; // Access the color scheme
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return PopScope(
-      // Use PopScope to control back navigation
-      canPop: false, // Prevent popping back to the booking page directly
+      canPop: false,
       onPopInvoked: (didPop) {
         if (didPop) return;
-        // Instead of popping, navigate back to the main screen or bookings list
+        // Navigate back to the main screen or bookings list on back press
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(
-            builder: (context) => const MainScreen(),
-          ), // Or BookingsPage()
-          (Route<dynamic> route) => false, // Remove all routes below MainScreen
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+          (Route<dynamic> route) => false,
         );
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l10n.bookingConfirmationTitle), // Localized title
-          // AppBar styling picks up theme.appBarTheme automatically
-          automaticallyImplyLeading: false, // Hide the back button
+          title: Text(l10n.bookingConfirmationTitle),
+          automaticallyImplyLeading: false,
         ),
-        // Scaffold background picks up theme.scaffoldBackgroundColor automatically
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Center(
-            // Center the confirmation card
             child: Container(
-              // Using Container with decoration similar to Sign In/Up
               padding: const EdgeInsets.all(20),
               width: MediaQuery.of(context).size.width * 0.9,
-              constraints: const BoxConstraints(
-                maxWidth: 450,
-              ), // Max width for larger screens
+              constraints: const BoxConstraints(maxWidth: 450),
               decoration: BoxDecoration(
-                color: theme.cardColor, // Use theme's card color
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow:
                     theme.brightness == Brightness.light
                         ? [
-                          // Show shadow in light mode
                           BoxShadow(
                             color: Colors.black.withOpacity(0.1),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
                         ]
-                        : null, // No shadow in dark mode
+                        : null,
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.min, // Make column fit content
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Confirmation Message
                   Text(
-                    l10n.bookingConfirmedMessage, // Localized confirmation message
+                    l10n.bookingConfirmedMessage,
                     style: theme.textTheme.headlineSmall?.copyWith(
-                      // Using headlineSmall
-                      color:
-                          colorScheme.primary, // Use primary color for emphasis
+                      color: colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 20),
 
-                  // Booking Details Summary
                   Text(
-                    l10n.bookingSummary, // Localized section title
+                    l10n.bookingSummary,
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
@@ -123,36 +122,61 @@ class BookingConfirmationPage extends StatelessWidget {
                   ),
                   const Divider(height: 24),
 
-                  // Use the helper to display details
                   _buildDetailRow(
                     l10n.travelId,
-                    booking.travelId.toString(),
+                    widget.booking.travelId
+                        .toString(), // Access booking via widget.booking
                     theme,
-                  ), // Assuming travelId can be non-string
+                  ),
+                  // Display Booking Reference
+                  _buildDetailRow(
+                    l10n.bookingReference,
+                    widget.booking.bookingRef ??
+                        l10n.notAvailable, // Access booking via widget.booking
+                    theme,
+                  ),
                   _buildDetailRow(
                     l10n.seatNo,
-                    booking.seatNo.toString(),
+                    widget.booking.seatNo
+                        .toString(), // Access booking via widget.booking
                     theme,
-                  ), // Assuming seatNo can be non-string
+                  ),
                   _buildDetailRow(
                     l10n.bookTime,
-                    DateFormat(
-                      'yyyy-MM-dd HH:mm:ss',
-                    ).format(booking.bookTime), // Use full format for clarity
+                    widget.booking.bookTime !=
+                            null // Access booking via widget.booking
+                        ? DateFormat('yyyy-MM-dd HH:mm:ss').format(
+                          widget.booking.bookTime,
+                        ) // Access booking via widget.booking
+                        : l10n.notAvailable,
                     theme,
                   ),
                   _buildDetailRow(
-                    l10n.paymentDue, // New localization key for payment due
-                    DateFormat(
-                      'yyyy-MM-dd HH:mm:ss',
-                    ).format(booking.bookTimeLimit), // Use full format
+                    l10n.paymentDue,
+                    widget.booking.bookTimeLimit !=
+                            null // Access booking via widget.booking
+                        ? DateFormat('yyyy-MM-dd HH:mm:ss').format(
+                          widget.booking.bookTimeLimit,
+                        ) // Access booking via widget.booking
+                        : l10n.notAvailable,
                     theme,
                   ),
-                  // Safely display payment amount, assuming it's a double or int
-                  // Using paymentType here as in your original code, but assuming it holds the price
                   _buildDetailRow(
-                    l10n.paymentAmount, // New localization key for payment amount
-                    '${double.tryParse(booking.paymentType?.toString() ?? '0.0')?.toStringAsFixed(2) ?? l10n.notAvailable} ${l10n.currencyETB}', // Safely parse and format
+                    l10n.paymentAmount,
+                    '${widget.booking.price.toStringAsFixed(2)} ${l10n.currencyETB}', // Access booking via widget.booking
+                    theme,
+                  ),
+                  _buildDetailRow(
+                    l10n.paymentType,
+                    widget.booking.paymentType ??
+                        l10n.notAvailable, // Access booking via widget.booking
+                    theme,
+                  ),
+                  // Display generated Payment Reference (from the nested Payment struct)
+                  _buildDetailRow(
+                    l10n.paymentRef,
+                    widget.booking.paymentRef?.currentPaymentRef ??
+                        l10n.notAvailable, // Access nested paymentRef
                     theme,
                   ),
 
@@ -163,127 +187,204 @@ class BookingConfirmationPage extends StatelessWidget {
                     alignment: Alignment.center,
                     child: ElevatedButton(
                       onPressed: () async {
-                        // async is still needed for context.mounted checks or future async operations
-                        // Check mounted state before using context in async
-                        if (!context.mounted) return;
+                        if (!mounted) return;
 
                         final userProvider = Provider.of<UserProvider>(
                           context,
                           listen: false,
                         );
                         final userData = userProvider.userData;
+                        final jwtToken = userProvider.jwtToken;
 
-                        if (userData != null) {
-                          // Check mounted state before showing loading or using context
-                          if (!context.mounted) return;
-                          // Show a loading indicator or message
+                        if (userData != null && jwtToken != null) {
+                          if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.initiatingPayment),
-                            ), // Localized message
+                            SnackBar(content: Text(l10n.initiatingPayment)),
                           );
 
                           try {
-                            // Ensure you have a valid transaction reference
+                            String amountToPay =
+                                widget.booking.price.toString();
+                            // Use the paymentRef from the nested Payment struct for Chapa's txRef
                             String transactionRef =
-                                booking.paymentRef.isNotEmpty
-                                    ? booking.paymentRef
-                                    : 'tx_${DateTime.now().microsecondsSinceEpoch}';
-                            // Fallback phone number if user phone is null/empty
+                                widget.booking.paymentRef?.currentPaymentRef ??
+                                "";
+                            print(
+                              "Chapa TxRef (from booking.paymentRef):     $transactionRef",
+                            );
+
                             String userPhone =
                                 userData.phoneNumber != null &&
                                         userData.phoneNumber!.isNotEmpty
                                     ? userData.phoneNumber!
-                                    : '0900112233';
+                                    : '0900123456';
 
-                            // Safely get amount, assuming paymentType holds the price as a string or can be converted
-                            String amountToPay =
-                                booking.paymentType?.toString() ?? '0';
-                            if (double.tryParse(amountToPay) == null) {
-                              // Handle invalid amount case
-                              if (!context.mounted) return;
+                            if (double.tryParse(amountToPay) == null ||
+                                double.parse(amountToPay) <= 0) {
+                              if (!mounted) return;
                               ScaffoldMessenger.of(
                                 context,
-                              ).hideCurrentSnackBar(); // Hide loading
+                              ).hideCurrentSnackBar();
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    l10n.paymentError('Invalid amount'),
+                                    l10n.paymentError(
+                                      'Invalid amount: $amountToPay',
+                                    ),
                                   ),
-                                ), // Localized error
+                                ),
                               );
-                              return; // Stop if amount is invalid
+                              return;
                             }
 
-                            // 1. Set the payment parameters (This static call seems ok)
-                            Chapa.paymentParameters(
+                            final chapa = Chapa.paymentParameters(
                               context: context,
-                              publicKey: 'CHAPUBK_TEST-voptMDn42ONLgwsUDFMy6bTYay96dvxL', 
-                              currency: 'ETB', 
-                              amount: '5', 
-                              email: 'johannes.woldeyes@gmail.com' ,
-                              phone: "0900112233",
-                              firstName: "Abe",
-                              lastName: "Kebe",
-                              txRef: "chappatest5-tx-12345678sss2abcMiniRocks",
-                              title: "l10n.paymentTitle", 
-                              desc: "l10n.paymentDescription(booking.travelId.toString(),)",
+                              publicKey:
+                                  'CHAPUBK_TEST-voptMDn42ONLgwsUDFMy6bTYay96dvxL',
+                              currency: 'ETB',
+                              amount: amountToPay,
+                              email: userData.email ?? '',
+                              phone: userPhone,
+                              firstName: userData.firstName ?? '',
+                              lastName: userData.lastName ?? '',
+                              txRef:
+                                  transactionRef, // Use the generated PaymentRef for Chapa transaction reference
+                              title: l10n.paymentTitle,
+                              desc: l10n.paymentDescription(
+                                widget.booking.travelId.toString(),
+                              ),
                               nativeCheckout: true,
-                              // namedRouteFallBack: '/checkin', 
+                              namedRouteFallBack: '',
                               showPaymentMethodsOnGridView: true,
                               availablePaymentMethods: const [
-                                'mpesa', // Example methods, confirm supported ones
+                                'mpesa',
                                 'cbebirr',
                                 'telebirr',
                                 'ebirr',
-                                // Add other methods supported by Chapa 0.0.7+1 if needed
                                 'awash',
                                 'abank',
                                 'boa',
                               ],
-                              onPaymentFinished: (message, reference, amount) {
-                                Navigator.pop(context);
+                              onPaymentFinished: (
+                                message,
+                                reference, // This is Chapa's transaction reference
+                                amount,
+                              ) async {
+                                if (!mounted) return;
+
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).hideCurrentSnackBar();
+
+                                print(
+                                  '\n\n\n\tChapa payment finished callback triggered. Message: $message, Ref: $reference, Amount: $amount\n\n\n',
+                                );
+                                print(
+                                  'Attempting to update booking status on backend from callback...',
+                                );
+
+                                String backendStatus;
+                                print("\n\t\tInside the Payment\n");
+                                print("$message\n\n");
+
+                                
+                                if (message == 'paymentSuccessful') {
+                                  backendStatus = 'confirmed';
+                                } else if (message == 'Invalid Test Number or Invalid OTP or payment method, please refer to our documentation.') {
+                                  backendStatus = 'failed';
+                                } else if (message == 'Transaction reference has been used before') {
+                                  backendStatus = 'failed';
+                                } else {
+                                  backendStatus = 'unknown';
+                                }
+
+                                BookingStatus
+                                bookingStatusUpdate = BookingStatus(
+                                  bookingRef:
+                                      widget.booking.bookingRef ??
+                                      '', // Use the bookingRef from the original booking
+                                  status: backendStatus,
+                                );
+
+                                BookingServices bookingServices =
+                                    BookingServices();
+
+                                print(
+                                  '\n\t\tCalling updateBookingStatus with bookingRef: ${bookingStatusUpdate.bookingRef} and status: ${bookingStatusUpdate.status} \n\n',
+                                );
+
+                                Booking? updatedBooking;
+                                String? backendUpdateError;
+
+                                try {
+                                  updatedBooking = await bookingServices
+                                      .updateBookingStatus(
+                                        bookingStatusUpdate,
+                                        jwtToken,
+                                      ); // Assuming this returns Booking?
+
+                                  if (updatedBooking != null) {
+                                    print(
+                                      'Backend status update successful from callback. New status: ${updatedBooking.status}',
+                                    );
+                                  } else {
+                                    print(
+                                      'Failed to update booking status on backend from callback (API returned null).',
+                                    );
+                                    backendUpdateError = AppLocalizations.of(
+                                      context,
+                                    )!.paymentError(
+                                      'Failed to finalize booking status on backend.',
+                                    ); // Localize
+                                  }
+                                } catch (e) {
+                                  print(
+                                    'Error calling backend updateBookingStatus API from callback: $e',
+                                  );
+                                  backendUpdateError = AppLocalizations.of(
+                                    context,
+                                  )!.paymentError(
+                                    'An error occurred while updating booking status.',
+                                  ); // Localized error
+                                }
+
+                                if (mounted) {
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => PaymentSuccessPage(
+                                            // Pass the updated booking if available, otherwise the original
+                                            booking:
+                                                updatedBooking ??
+                                                widget.booking,
+                                            // Pass the backend update error message
+                                            backendUpdateError:
+                                                backendUpdateError,
+                                          ),
+                                    ),
+                                    (Route<dynamic> route) =>
+                                        false, // Remove all routes below success page
+                                  );
+
+                                  if (updatedBooking != null &&
+                                      updatedBooking.status == 'confirmed') {
+                                    // SnackBar shown on success page is often sufficient
+                                  } else if (backendUpdateError != null) {
+                                    // SnackBar shown on success page is often sufficient
+                                  } else if (updatedBooking != null) {
+                                    // Backend update successful but status is not confirmed
+                                    // SnackBar shown on success page is often sufficient
+                                  }
+                                }
                               },
-                              // onPaymentFinished parameter is NOT used here as per error
                             );
 
-                            // Check mounted state after the (non-awaited) initiatePayment call
-                            // as control might return here quickly before the UI closes
-                            if (!context.mounted) return;
-
-                            // Hide the initiating payment message immediately after calling initiatePayment
-                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-                            // TODO: >>> IMPORTANT <<<
-                            // The error "Instance member 'initiatePayment' can't be accessed using static access"
-                            // means initiatePayment must be called on an INSTANCE, not on the static Chapa class.
-                            // The method returns void, and the result is handled by a separate callback.
-
-                            // You MUST consult the Chapa SDK documentation for version 0.0.7+1
-                            // to find out:
-                            // 1. How to obtain the instance that has the initiatePayment method.
-                            //    (e.g., Is it returned by Chapa.paymentParameters? Is there a Chapa.getInitiator()?)
-                            // 2. How to register the payment completion callback.
-                            //    (e.g., Is there a Chapa.onPaymentResult listener? Is the callback set on the instance?)
-
-                            // --- Placeholder for obtaining instance and calling initiatePayment ---
-                            /*
-                             // Example Hypothetical Usage (Check SDK Docs for actual API):
-                             var chapaInitiator = // How you get the instance from the SDK? ;
-
-                             // Example Hypothetical Callback Registration (Check SDK Docs):
-                             // chapaInitiator.setOnPaymentResultCallback((message, reference, amount) {
-                               // Handle result here (similar to the onPaymentFinished logic previously)
-                               // Remember context.mounted checks inside callbacks
-                             // });
-
-                             // Now call initiatePayment on the instance
-                             // chapaInitiator.initiatePayment(); // This call should now work on the instance
-                             */
-                            // --- End Placeholder ---
+                            // Now, call initiatePayment on the instance returned by paymentParameters
+                            chapa.initiatePayment();
                           } catch (e) {
                             // Check mounted state before using context
-                            if (!context.mounted) return;
+                            if (!mounted) return;
                             ScaffoldMessenger.of(
                               context,
                             ).hideCurrentSnackBar(); // Hide loading
@@ -296,7 +397,7 @@ class BookingConfirmationPage extends StatelessWidget {
                           }
                         } else {
                           // Check mounted state before using context
-                          if (!context.mounted) return;
+                          if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -319,7 +420,7 @@ class BookingConfirmationPage extends StatelessWidget {
                     alignment: Alignment.center,
                     child: TextButton(
                       onPressed: () {
-                        if (!context.mounted) return;
+                        if (!mounted) return;
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(

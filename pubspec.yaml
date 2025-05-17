@@ -54,6 +54,7 @@ dependencies:
   firebase_core: ^3.13.0
   firebase_messaging: ^15.2.5
   bus_seat_plan: ^0.0.3
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +69,13 @@ dev_dependencies:
   build_runner: ^2.4.4
   json_serializable: ^6.7.1
   flutter_launcher_icons: "^0.13.1"
+
+# WARNING: Using dependency_overrides for core SDK transitive dependencies like intl
+# is NOT recommended for production and can cause instability or unexpected behavior.
+# Use this as a temporary workaround ONLY if you absolutely need chapasdk >= 0.0.8
+# and are blocked by the intl version conflict with your current Flutter SDK.
+dependency_overrides:
+  intl: ^0.20.2 # Force intl to a version compatible with chapasdk >= 0.0.8
 
 flutter_launcher_icons:
   # Specify the path to your icon image

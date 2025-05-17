@@ -39,6 +39,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   late UserProvider userProvider;
   late String? _currentTravellerId;
+  late String? _jwtToken;
 
   @override
   void initState() {
@@ -48,6 +49,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       userProvider = Provider.of<UserProvider>(context, listen: false);
       final user = userProvider.userData;
       _currentTravellerId = user?.id; // Use nullable access
+      _jwtToken = userProvider.jwtToken;
 
       // Only load from backend if traveller ID is available
       if (_currentTravellerId != null && _currentTravellerId!.isNotEmpty) {
@@ -118,7 +120,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     try {
       // Call the updated API function that returns a List<CustomNotification>
       final List<CustomNotification> backendNotifications =
-          await getNotificationsForTraveller(_currentTravellerId);
+          await getNotificationsForTraveller(_currentTravellerId, _jwtToken);
 
       // Check if the widget is still mounted before calling setState
       if (!mounted) return;
@@ -274,6 +276,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           final success = await markNotificationAsReadApi(
             _currentTravellerId!, // Use non-nullable version
             notificationItem.id,
+            _jwtToken.toString()
           ); // Pass traveller ID and notification ID
 
           if (!success) {
@@ -328,6 +331,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           final success = await markNotificationAsUnreadApi(
             _currentTravellerId!, // Use non-nullable version
             notificationItem.id,
+            _jwtToken.toString()
           ); // Pass traveller ID and notification ID
 
           if (!success) {

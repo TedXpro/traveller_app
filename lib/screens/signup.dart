@@ -290,10 +290,12 @@ class _SignUpPageState extends State<SignUpPage> {
 
           if ((label == l10n.firstName || label == l10n.lastName) &&
               !isValidName(value)) {
-            if (label == l10n.firstName && !isValidName(value))
+            if (label == l10n.firstName && !isValidName(value)) {
               return l10n.validFirstName;
-            if (label == l10n.lastName && !isValidName(value))
+            }
+            if (label == l10n.lastName && !isValidName(value)) {
               return l10n.validLastName;
+            }
           }
 
           if (isPassword && !isPasswordSecure(value)) {

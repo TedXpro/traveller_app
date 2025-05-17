@@ -36,11 +36,19 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     // Reload data from providers
-    Provider.of<UserProvider>(context, listen: false).loadUserData();
-    Provider.of<DestinationProvider>(
-      context,
-      listen: false,
-    ).fetchDestinations();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Reload data from providers
+      // Use listen: false when calling methods in initState or postFrameCallback
+      Provider.of<UserProvider>(context, listen: false).loadUserDataAndToken();
+      Provider.of<DestinationProvider>(
+        context,
+        listen: false,
+      ).fetchDestinations().then((_) { // Chain .then() to execute after fetch completes
+         // Access the provider again (still with listen: false) to print the updated list
+         final destinationProvider = Provider.of<DestinationProvider>(context, listen: false);
+         print('Fetched Destinations: ${destinationProvider.destinations}');
+      });
+    });
   }
 
   @override

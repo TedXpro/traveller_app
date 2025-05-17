@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:traveller_app/providers/user_provider.dart';
-import 'package:traveller_app/screens/map.dart';
-import 'package:traveller_app/screens/settings.dart';
-import 'package:traveller_app/screens/signin.dart';
+import 'package:traveller_app/screens/map.dart'; // Assuming MapPage is here
+import 'package:traveller_app/screens/settings.dart'; // Assuming SettingsScreen is here
+import 'package:traveller_app/screens/signin.dart'; // Assuming SignInPage is here
+import 'package:traveller_app/screens/edit_profile.dart'; // Assuming EditProfilePage is here
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:traveller_app/screens/notification_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'; // Import Firebase Messaging
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
@@ -61,7 +61,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   _logout(BuildContext context) async {
     // Ensure the UserProvider is accessible
-    await Provider.of<UserProvider>(context, listen: false).clearUserData();
+    await Provider.of<UserProvider>(
+      context,
+      listen: false,
+    ).clearUserDataAndToken();
     // Use pushReplacementNamed if you have a named route for SignInPage
     // Otherwise, the current MaterialPageRoute is fine
     Navigator.pushReplacement(
@@ -83,10 +86,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Ensure the asset path is correct
             Image.asset('assets/hawir_logo.png', height: 60),
             const SizedBox(width: 8),
             Text(
-              l10n.hawir,
+              l10n.hawir, // Localize the app name
               style: TextStyle(
                 fontSize: 20,
                 color: appBarTheme.foregroundColor,
@@ -98,17 +102,24 @@ class _CustomAppBarState extends State<CustomAppBar> {
       actions: [
         IconButton(
           onPressed: () {
+            if (!context.mounted) return; // Check mounted before navigating
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const MapPage()),
             );
           },
-          icon: const Icon(Icons.map),
+          icon: Icon(
+            Icons.map,
+            color: appBarTheme.actionsIconTheme?.color,
+          ), // Use theme color
         ),
         Stack(
           children: [
             IconButton(
-              icon: const Icon(Icons.notifications),
+              icon: Icon(
+                Icons.notifications,
+                color: appBarTheme.actionsIconTheme?.color,
+              ), // Use theme color
               onPressed: () => _navigateToNotifications(context),
             ),
             if (_hasUnreadNotifications)
@@ -119,7 +130,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                   width: 10.0,
                   height: 10.0,
                   decoration: const BoxDecoration(
-                    color: Colors.red,
+                    color: Colors.red, // Use a distinct color for the badge
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -128,18 +139,51 @@ class _CustomAppBarState extends State<CustomAppBar> {
         ),
       ],
       leading: PopupMenuButton<String>(
-        icon: const Icon(Icons.menu),
+        icon: Icon(
+          Icons.menu,
+          color: appBarTheme.iconTheme?.color,
+        ), // Use theme color for menu icon
         onSelected: (String value) {
+          // Check mounted state before using context in async operations or navigation
+          if (!context.mounted) return;
+
           if (value == 'edit') {
-            // TODO: Implement Edit Profile Navigation
-            print('Edit Profile');
+            // Access the UserProvider to get the user data
+            final userProvider = Provider.of<UserProvider>(
+              context,
+              listen: false,
+            );
+            final user = userProvider.userData;
+
+            // Only navigate if user data is available
+            if (user != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditProfilePage(user: user),
+                ), // Pass the user object
+              );
+              print('Navigating to Edit Profile');
+            } else {
+              print('User data not available for editing.');
+              // Optionally show a message to the user that data is loading or unavailable
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('User data not loaded. Please try again.'),
+                ),
+              );
+            }
           } else if (value == 'settings') {
+            if (!context.mounted) return; // Check mounted before navigating
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SettingsScreen()),
             );
+            print('Navigating to Settings');
           } else if (value == 'logout') {
+            // No need for mounted check before calling _logout as it handles it internally
             _logout(context);
+            print('Logging out');
           }
         },
         itemBuilder:
@@ -147,10 +191,15 @@ class _CustomAppBarState extends State<CustomAppBar> {
               PopupMenuItem<String>(
                 value: 'edit',
                 child: ListTile(
-                  leading: Icon(Icons.edit, color: colorScheme.onSurface),
+                  leading: Icon(
+                    Icons.edit,
+                    color: colorScheme.onSurface,
+                  ), // Use theme color
                   title: Text(
-                    l10n.editProfile,
-                    style: TextStyle(color: colorScheme.onSurface),
+                    l10n.editProfile, // Localize
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                    ), // Use theme color
                   ),
                 ),
               ),
@@ -160,10 +209,15 @@ class _CustomAppBarState extends State<CustomAppBar> {
               PopupMenuItem<String>(
                 value: 'settings',
                 child: ListTile(
-                  leading: Icon(Icons.settings, color: colorScheme.onSurface),
+                  leading: Icon(
+                    Icons.settings,
+                    color: colorScheme.onSurface,
+                  ), // Use theme color
                   title: Text(
-                    l10n.settings,
-                    style: TextStyle(color: colorScheme.onSurface),
+                    l10n.settings, // Localize
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                    ), // Use theme color
                   ),
                 ),
               ),
@@ -173,10 +227,15 @@ class _CustomAppBarState extends State<CustomAppBar> {
               PopupMenuItem<String>(
                 value: 'logout',
                 child: ListTile(
-                  leading: Icon(Icons.logout, color: colorScheme.onSurface),
+                  leading: Icon(
+                    Icons.logout,
+                    color: colorScheme.onSurface,
+                  ), // Use theme color
                   title: Text(
-                    l10n.logOut,
-                    style: TextStyle(color: colorScheme.onSurface),
+                    l10n.logOut, // Localize
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                    ), // Use theme color
                   ),
                 ),
               ),

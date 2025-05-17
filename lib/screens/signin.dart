@@ -9,13 +9,14 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:traveller_app/models/email_credential.dart';
 import 'package:traveller_app/models/login_response.dart';
-import 'package:traveller_app/providers/destination_provider.dart';
-import 'package:traveller_app/providers/user_provider.dart';
+import 'package:traveller_app/providers/user_provider.dart'; // Import UserProvider
 import 'package:traveller_app/screens/main_screen.dart';
 import 'package:traveller_app/screens/signup.dart';
-import 'package:traveller_app/services/user_api_services.dart';
-import 'package:traveller_app/utils/validation_utils.dart';
+import 'package:traveller_app/services/user_api_services.dart'; // Assuming UserService is here
+import 'package:traveller_app/utils/validation_utils.dart'; // Assuming validation_utils is here
 import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
+// Assuming JwtDecoder is imported or available globally if needed for decoding token payload
+// import 'package:jwt_decoder/jwt_decoder.dart'; // Example import if needed
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -55,8 +56,7 @@ class _SignInPageState extends State<SignInPage> {
         EmailCredential credentials = EmailCredential(
           email: _emailController.text.trim(),
           password:
-              _passwordController.text
-                  .trim(), // Do not trim password if exact match is needed
+              _passwordController.text.trim(), // Do not trim password if exact match is needed
         );
 
         LoginResponse? loginResponse = await UserService().login(credentials);
@@ -79,21 +79,24 @@ class _SignInPageState extends State<SignInPage> {
             prefs.remove('rememberedEmail');
             prefs.remove('rememberedPassword');
           }
-          prefs.setString('authToken', loginResponse.token);
+
+          await Provider.of<UserProvider>(
+            context,
+            listen: false,
+          ).setUserDataAndToken(loginResponse.user, loginResponse.token); // Pass both user and token
+          // -------------------------------------------------
 
           // Check mounted before using context with Provider
           if (!mounted) return;
-          Provider.of<UserProvider>(
-            context,
-            listen: false,
-          ).setUserData(loginResponse.user);
+          // It's generally better to fetch initial data like destinations
+          // in the MainScreen's initState using addPostFrameCallback,
+          // as we discussed previously, to avoid setState during build.
+          // Removing the direct call here. Ensure MainScreen handles this.
+          // await Provider.of<DestinationProvider>(
+          //   context,
+          //   listen: false,
+          // ).fetchDestinations();
 
-          // Check mounted before using context with Provider
-          if (!mounted) return;
-          await Provider.of<DestinationProvider>(
-            context,
-            listen: false,
-          ).fetchDestinations();
 
           // Check mounted after await before using context
           if (!mounted) return;
@@ -107,9 +110,11 @@ class _SignInPageState extends State<SignInPage> {
           if (fcmToken != null) {
             // Send the FCM token to your backend
             // Consider adding mounted check here if storeFCMToken is async and uses context
+            // Ensure storeFCMToken accepts the JWT token for authentication if needed
             await UserService().storeFCMToken(
               userId: loginResponse.user.id!,
               fcmToken: fcmToken,
+              jwtToken: loginResponse.token,
             );
           } else {
             print('Failed to get FCM token during login.');
@@ -204,12 +209,12 @@ class _SignInPageState extends State<SignInPage> {
               boxShadow:
                   theme.brightness == Brightness.light
                       ? [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ]
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ]
                       : null,
             ),
             child: Form(
@@ -315,21 +320,21 @@ class _SignInPageState extends State<SignInPage> {
                   const SizedBox(height: 20),
                   _isLoading
                       ? const Center(
-                        child: CircularProgressIndicator(),
-                      ) // Progress indicator will use theme colors
+                          child: CircularProgressIndicator(),
+                        ) // Progress indicator will use theme colors
                       : ElevatedButton(
-                        onPressed: handleLogin,
-                        // Set minimumSize to stretch the button horizontally
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                          // Theme's background, foreground, shape, padding will apply
-                          // if not explicitly set here.
-                          // e.g. backgroundColor: theme.elevatedButtonTheme.style?.backgroundColor?.resolve({MaterialState.pressed}),
-                          // It's often simplest to let the theme handle these entirely
-                          // unless a specific override (like size or branded color) is needed.
+                          onPressed: handleLogin,
+                          // Set minimumSize to stretch the button horizontally
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 50),
+                            // Theme's background, foreground, shape, padding will apply
+                            // if not explicitly set here.
+                            // e.g. backgroundColor: theme.elevatedButtonTheme.style?.backgroundColor?.resolve({MaterialState.pressed}),
+                            // It's often simplest to let the theme handle these entirely
+                            // unless a specific override (like size or branded color) is needed.
+                          ),
+                          child: Text(l10n.signIn), // Localized
                         ),
-                        child: Text(l10n.signIn), // Localized
-                      ),
                   const SizedBox(height: 20),
                   // Use theme's text style for the 'or' separator
                   Center(child: Text('or', style: theme.textTheme.bodyMedium)),

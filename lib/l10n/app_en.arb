@@ -573,5 +573,141 @@
   "backToBookings": "Back to Bookings",
   "@backToBookings": {
     "description": "Label for the button to navigate back to the bookings list."
+  },
+  "paymentSuccessTitle": "Payment Successful",
+  "@paymentSuccessTitle": {
+    "description": "Title of the payment success page."
+  },
+  "paymentSuccessfulMessage": "Your payment has been processed successfully!",
+  "@paymentSuccessfulMessage": {
+    "description": "Message shown to the user after a successful payment transaction."
+  },
+  "goToHome": "Go to Home",
+  "@goToHome": {
+    "description": "Label for the button to navigate to the home screen after successful payment."
+  },
+  "pleaseEnterPhoneNumber": "Please enter your phone number.",
+  "@pleaseEnterPhoneNumber": {
+    "description": "Error message shown when the phone number field is empty during profile update."
+  },
+  "savingChanges": "Saving changes...",
+  "@savingChanges": {
+    "description": "Loading message shown while profile changes are being saved."
+  },
+  "loginRequiredForSavingProfile": "Login required to save profile changes.",
+  "@loginRequiredForSavingProfile": {
+    "description": "Error message shown when a user tries to save profile changes without being logged in."
+  },
+  "profileUpdatedSuccessfully": "Profile updated successfully!",
+  "@profileUpdatedSuccessfully": {
+    "description": "Success message shown after a user's profile information is successfully updated."
+  },
+  "failedToUpdateProfile": "Failed to update profile: {errorMessage}",
+  "@failedToUpdateProfile": {
+    "description": "Error message shown when updating the profile fails, including the specific error from the backend.",
+    "placeholders": {
+      "errorMessage": {
+        "type": "String",
+        "description": "The specific error message received from the backend API."
+      }
+    }
+  },
+  "pleaseFillAllPasswordFields": "Please fill in all password fields.",
+  "@pleaseFillAllPasswordFields": {
+    "description": "Error message shown when one or more password fields are empty during password change."
+  },
+  "changingPassword": "Changing password...",
+  "@changingPassword": {
+    "description": "Loading message shown while the password is being changed."
+  },
+  "loginRequiredForPasswordChange": "Login required to change password.",
+  "@loginRequiredForPasswordChange": {
+    "description": "Error message shown when a user tries to change their password without being logged in."
+  },
+  "passwordChangedSuccessfully": "Password changed successfully!",
+  "@passwordChangedSuccessfully": {
+    "description": "Success message shown after a user's password is successfully changed."
+  },
+  "failedToChangePassword": "Failed to change password: {errorMessage}",
+  "@failedToChangePassword": {
+    "description": "Error message shown when changing the password fails, including the specific error from the backend.",
+    "placeholders": {
+      "errorMessage": {
+        "type": "String",
+        "description": "The specific error message received from the backend API."
+      }
+    }
+  },
+  "bookingReference": "Booking Reference",
+  "@bookingReference": {
+    "description": "Label for the booking reference number."
+  },
+  "loginRequiredForBookingDetails": "Login required to view booking details.",
+  "@loginRequiredForBookingDetails": {
+    "description": "Message shown when a user needs to be logged in to see booking details."
+  },
+  "paymentStatusTitle": "Payment Status",
+  "@paymentStatusTitle": {
+    "description": "Title for the page displaying the payment status."
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Label for a button to retry an action, like fetching data."
+  },
+  "backToHome": "Back to Home",
+  "@backToHome": {
+    "description": "Label for a button to navigate back to the main screen."
+  },
+  "myBookingsTitle": "My Bookings",
+  "@myBookingsTitle": {
+    "description": "App bar title for the bookings list page."
+  },
+  "noBookingsFound": "No bookings found.",
+  "@noBookingsFound": {
+    "description": "Message displayed when the user has no bookings."
+  },
+  "bookedOn": "Booked on",
+  "@bookedOn": {
+    "description": "Label indicating the date and time a booking was made."
+  },
+  "from": "From",
+  "@from": {
+    "description": "Label indicating the starting location of a travel."
+  },
+  "gallery": "Gallery",
+  "@gallery": {
+    "description": "Option to select an image from the device gallery."
+  },
+  "camera": "Camera",
+  "@camera": {
+    "description": "Option to take a new photo using the device camera."
+  },
+  "imageSelected": "Image selected successfully.",
+  "@imageSelected": {
+    "description": "Confirmation message shown after a user selects an image."
+  },
+  "failedToPickImage": "Failed to pick image: {errorMessage}",
+  "@failedToPickImage": {
+    "description": "Error message shown when image picking fails.",
+    "placeholders": {
+      "errorMessage": {
+        "type": "String",
+        "example": "Permission denied"
+      }
+    }
+  },
+  "failedToUploadImage": "Failed to upload image.",
+  "@failedToUploadImage": {
+    "description": "Generic error message shown when image upload fails."
+  },
+  "failedToUploadImageParam": "Failed to upload image: {errorMessage}",
+  "@failedToUploadImageParam": {
+    "description": "Error message shown when image upload fails, including a specific error.",
+    "placeholders": {
+      "errorMessage": {
+        "type": "String",
+        "example": "Network error"
+      }
+    }
   }
 }
