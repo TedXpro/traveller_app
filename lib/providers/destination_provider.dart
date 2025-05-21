@@ -62,7 +62,8 @@ class DestinationProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      _destinations = await fetchDestinationsApi();
+      final destinationService = DestinationService();
+      _destinations = await destinationService.fetchAllDestinations();
       _isLoading = false;
       notifyListeners();
     } catch (e) {

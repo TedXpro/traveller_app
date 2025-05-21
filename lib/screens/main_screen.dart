@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:traveller_app/providers/destination_provider.dart';
 import 'package:traveller_app/providers/user_provider.dart';
+import 'package:traveller_app/screens/destinations_list_page.dart';
 import 'package:traveller_app/widgets/custom_app_bar.dart';
 import 'package:traveller_app/widgets/custom_nav_bar.dart';
 import 'package:traveller_app/screens/bookings.dart';
-import 'package:traveller_app/screens/check_in.dart';
+// import 'package:traveller_app/screens/check_in.dart';
 import 'package:traveller_app/screens/home.dart';
 import 'package:traveller_app/screens/profile.dart';
 
@@ -22,7 +23,8 @@ class _MainScreenState extends State<MainScreen> {
   static const List<Widget> _pages = <Widget>[
     HomePage(),
     BookingsPage(),
-    CheckInPage(),
+    DestinationsListPage(),
+    // CheckInPage(),
     ProfilePage(),
   ];
 

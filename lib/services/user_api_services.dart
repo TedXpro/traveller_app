@@ -5,9 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:traveller_app/models/change_credentials.dart';
 import 'package:traveller_app/models/email_credential.dart';
+import 'package:traveller_app/models/reset_password_request.dart';
 import 'package:traveller_app/models/user.dart';
 import 'package:traveller_app/models/login_response.dart';
-import 'package:traveller_app/models/user_profile.dart';
 import 'package:traveller_app/constants/api_constants.dart';
 
 class UserService {
@@ -206,9 +206,7 @@ class UserService {
     ChangeCredential userCredential,
     String jwtToken,
   ) async {
-    final url = Uri.parse(
-      '$baseUrl/user/password/reset',
-    );
+    final url = Uri.parse('$baseUrl/user/password/reset');
     try {
       final response = await http.put(
         url,
@@ -231,9 +229,7 @@ class UserService {
         print(
           "Failed to change password for email: ${userCredential.email}. Status code: ${response.statusCode}",
         );
-        print(
-          "Response body: ${response.body}",
-        ); 
+        print("Response body: ${response.body}");
         return errorData['error'] ?? 'Unknown error'; // Use null-aware operator
       }
     } catch (e) {
@@ -282,9 +278,7 @@ class UserService {
     required String fcmToken,
     required String jwtToken, // Added jwtToken parameter
   }) async {
-    final url = Uri.parse(
-      '$baseUrl/user/$userId/fcm-token',
-    ); 
+    final url = Uri.parse('$baseUrl/user/$userId/fcm-token');
     try {
       final response = await http.delete(
         url,
@@ -292,9 +286,7 @@ class UserService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $jwtToken',
         },
-        body: jsonEncode({
-          'fcm_token': fcmToken,
-        }), 
+        body: jsonEncode({'fcm_token': fcmToken}),
       );
 
       if (response.statusCode == 200) {
@@ -311,6 +303,98 @@ class UserService {
       }
     } catch (e) {
       print('Error removing FCM token from server for user $userId: $e');
+    }
+  }
+
+  Future<bool> resetPassword({
+    required String email,
+    required String newPassword,
+    required String code,
+  }) async {
+    final String endpoint = '/user/password/forget/reset';
+    final url = Uri.parse(
+      '$baseUrl$endpoint',
+    ); // baseUrl should be defined in api_constants.dart
+
+    // Create the request body matching the backend struct (ForgetPassword)
+    final resetRequest = ResetPasswordRequest(
+      // ResetPasswordRequest model should be defined
+      email: email,
+      newPassword: newPassword,
+      code: code,
+    );
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(
+          resetRequest.toJson(),
+        ), // Encode the request body to JSON
+      );
+
+      print('Reset Password API Response Status: ${response.statusCode}');
+      print(
+        'Reset Password API Response Body: ${response.body}',
+      ); // Log response body
+
+      // Assuming your backend returns a 2xx status code on success
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        print('Password reset successful for email: $email');
+        return true; // Indicate success
+      } else {
+        print(
+          'Password reset failed: ${response.statusCode} - ${response.body}',
+        );
+        return false; // Indicate failure
+      }
+    } catch (e) {
+      print('Error resetting password: $e');
+      // Re-throw the exception to be handled by the caller (e.g., in the UI)
+      rethrow;
+    }
+  }
+
+  Future<bool> requestPasswordResetCode({required String email}) async {
+    final String endpoint = '/user/password/forget/$email';
+    final url = Uri.parse(
+      '$baseUrl$endpoint',
+    ); // baseUrl should be defined in api_constants.dart
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        // The backend endpoint /user/password/forgot/:email typically doesn't require a body,
+        // as the email is in the URL. If your backend *does* expect a body like {"email": "..."},
+        // you would uncomment and use the line below:
+        // body: jsonEncode({'email': email}),
+      );
+
+      print(
+        'Request Password Reset Code API Response Status: ${response.statusCode}',
+      );
+      print(
+        'Request Password Reset Code API Response Body: ${response.body}',
+      ); // Log response body
+
+      // Assuming your backend returns a 2xx status code on success
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        print('Password reset code request successful for email: $email');
+        return true; // Indicate success
+      } else {
+        print(
+          'Password reset code request failed: ${response.statusCode} - ${response.body}',
+        );
+        // You might want to parse the error response body to get a specific error message
+        // and throw an exception or return a specific error type.
+        // For simplicity, returning false for any non-success status code for now.
+        return false; // Indicate failure
+      }
+    } catch (e) {
+      print('Error requesting password reset code: $e');
+      // Re-throw the exception to be handled by the caller (e.g., in the UI)
+      rethrow;
     }
   }
 }

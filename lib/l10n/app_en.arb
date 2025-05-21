@@ -709,5 +709,207 @@
         "example": "Network error"
       }
     }
+  },
+  "destinationsTitle": "Destinations",
+  "@destinationsTitle": {
+    "description": "Title for the destinations list page."
+  },
+  "failedToLoadDestinations": "Failed to load destinations: {error}",
+  "@failedToLoadDestinations": {
+    "description": "Error message displayed when the list of destinations fails to load.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network connection failed."
+      }
+    }
+  },
+  "noDestinationsFound": "No destinations found.",
+  "@noDestinationsFound": {
+    "description": "Message displayed when the list of destinations is empty."
+  },
+  "failedToLoadDestinationDetails": "Failed to load destination details: {error}",
+  "@failedToLoadDestinationDetails": {
+    "description": "Error message displayed when destination details fail to load.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Server responded with 404."
+      }
+    }
+  },
+  "noDescriptionAvailable": "No description available.",
+  "@noDescriptionAvailable": {
+    "description": "Message displayed when a description field is empty."
+  },
+  "cultureTitle": "Culture",
+  "@cultureTitle": {
+    "description": "Title for the culture section in destination details."
+  },
+  "historyTitle": "History",
+  "@historyTitle": {
+    "description": "Title for the history section in destination details."
+  },
+  "hotelsTitle": "Hotels",
+  "@hotelsTitle": {
+    "description": "Title for the hotels section in destination details."
+  },
+  "unknownHotel": "Unknown Hotel",
+  "@unknownHotel": {
+    "description": "Placeholder text for a hotel name if the name is missing."
+  },
+  "attractionsTitle": "Tourist Attractions",
+  "@attractionsTitle": {
+    "description": "Title for the tourist attractions section in destination details."
+  },
+  "unknownAttraction": "Unknown Attraction",
+  "@unknownAttraction": {
+    "description": "Placeholder text for a tourist attraction name if the name is missing."
+  },
+  "destinationDetailsNotFound": "Destination details not found.",
+  "@destinationDetailsNotFound": {
+    "description": "Message displayed when details for a specific destination ID are not found."
+  },
+  "sendCodeButton": "Send Code",
+  "@sendCodeButton": {
+    "description": "Text for the button to send the password reset code."
+  },
+  "cancelButton": "Cancel",
+  "@cancelButton": {
+    "description": "Text for the cancel button in a dialog."
+  },
+  "forgotPasswordEmailPrompt": "Please enter your email address to receive a password reset code.",
+  "@forgotPasswordEmailPrompt": {
+    "description": "Prompt text asking the user for their email to reset password."
+  },
+  "forgotPasswordTitle": "Forgot Password",
+  "@forgotPasswordTitle": {
+    "description": "Title for the forgot password dialog or page."
+  },
+  "resettingPassword": "Resetting password...",
+  "@resettingPassword": {
+    "description": "Loading message while resetting password."
+  },
+  "passwordResetSuccess": "Password reset successfully. You can now sign in with your new password.",
+  "@passwordResetSuccess": {
+    "description": "Success message after resetting password."
+  },
+  "passwordResetFailed": "Password reset failed. Please check the code and try again.",
+  "@passwordResetFailed": {
+    "description": "Generic error message for password reset failure."
+  },
+  "passwordResetError": "Error resetting password: %s",
+  "@passwordResetError": {
+    "description": "Error message for unexpected errors during password reset API call.",
+    "placeholders": {
+      "s": {
+        "type": "String",
+        "example": "Network error."
+      }
+    }
+  },
+  "resetPasswordTitle": "Reset Password",
+  "@resetPasswordTitle": {
+    "description": "Title for the reset password page."
+  },
+  "resetPasswordPrompt": "Enter the code sent to {email} and your new password.",
+  "@resetPasswordPrompt": {
+    "description": "Prompt text on the reset password page.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "user@example.com"
+      }
+    }
+  },
+  "codeLabel": "Code",
+  "@codeLabel": {
+    "description": "Label for the password reset code input field."
+  },
+  "pleaseEnterCode": "Please enter the code.",
+  "@pleaseEnterCode": {
+    "description": "Validation message for empty code field."
+  },
+  "invalidCodeLength": "Code must be 12 digits.",
+  "@invalidCodeLength": {
+    "description": "Validation message for incorrect code length."
+  },
+  "newPasswordLabel": "New Password",
+  "@newPasswordLabel": {
+    "description": "Label for the new password input field."
+  },
+  "pleaseEnterNewPassword": "Please enter a new password.",
+  "@pleaseEnterNewPassword": {
+    "description": "Validation message for empty new password field."
+  },
+  "confirmPasswordLabel": "Confirm New Password",
+  "@confirmPasswordLabel": {
+    "description": "Label for the confirm new password input field."
+  },
+  "pleaseConfirmPassword": "Please confirm your new password.",
+  "@pleaseConfirmPassword": {
+    "description": "Validation message for empty confirm password field."
+  },
+  "resetPasswordButton": "Reset Password",
+  "@resetPasswordButton": {
+    "description": "Text for the button to reset the password."
+  },
+  "invalidPassword": "Invalid password.",
+  "@invalidPassword": {
+    "description": "Validation message for an invalid password."
+  },
+  "forgotPasswordRequestError": "Error requesting reset code: {error}",
+  "@forgotPasswordRequestError": {
+    "description": "Error message for unexpected errors during reset code request API call.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Server error."
+      }
+    }
+  },
+  "forgotPasswordRequestFailed": "Failed to request reset code. Please check your email and try again.",
+  "@forgotPasswordRequestFailed": {
+    "description": "Error message when requesting password reset code fails."
+  },
+  "forgotPasswordEmailSent": "A password reset code has been sent to {email}.",
+  "@forgotPasswordEmailSent": {
+    "description": "Confirmation message after sending the reset code.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "user@example.com"
+      }
+    }
+  },
+  "requestingResetCode": "Requesting reset code...",
+  "@requestingResetCode": {
+    "description": "Loading message while requesting password reset code."
+  },
+  "noTravelsFound": "No travels found matching your criteria.",
+  "@noTravelsFound": {
+    "description": "Message displayed when no travels match the current filters."
+  },
+  "departureTime": "Departure: {time}",
+  "@departureTime": {
+    "description": "Label for displaying departure time.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "2025-05-22 18:13"
+      }
+    }
+  },
+  "filterByAgency": "Filter by Agency",
+  "@filterByAgency": {
+    "description": "Label for the agency filter section."
+  },
+  "allAgencies": "All Agencies",
+  "@allAgencies": {
+    "description": "Option to select all agencies in the filter."
+  },
+  "resetFilters": "Reset Filters",
+  "@resetFilters": {
+    "description": "Button to reset all applied filters."
   }
 }
