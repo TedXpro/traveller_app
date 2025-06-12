@@ -27,16 +27,23 @@ Future<List<Travel>> searchTravelsApi(
     queryParams['date_max'] = dateMax.toIso8601String().substring(0, 10);
   }
 
-  final response = await http.get(Uri.http(searchUrl, '/travels/search', queryParams));
+  final response = await http.get(
+    Uri.http(searchUrl, '/travels/search', queryParams),
+  );
   print("here ${response.body}");
 
   if (response.statusCode == 200) {
     try {
       List<dynamic> decodedResponse = jsonDecode(response.body);
 
-      return decodedResponse
-          .map((dynamic item) => Travel.fromJson(item as Map<String, dynamic>))
-          .toList();
+      decodedResponse =
+          decodedResponse
+              .map(
+                (dynamic item) => Travel.fromJson(item as Map<String, dynamic>),
+              )
+              .toList();
+      print("Decoded Travels: $decodedResponse");
+      return decodedResponse.cast<Travel>();
     } catch (e) {
       // Handle decoding or mapping errors
       print("Error decoding or mapping travels: $e");

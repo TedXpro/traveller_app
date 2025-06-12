@@ -911,5 +911,177 @@
   "resetFilters": "Reset Filters",
   "@resetFilters": {
     "description": "Button to reset all applied filters."
+  },
+  "pickupLocations": "Pickup Locations",
+  "@pickupLocations": {},
+  "busReference": "Bus Reference",
+  "@busReference": {},
+  "travelIdDisplay": "Travel ID: {travelId}",
+  "@travelIdDisplay": {
+    "placeholders": {
+      "travelId": {}
+    }
+  },
+  "loginRequiredForBookingsPage": "Please log in to view your bookings.",
+  "@loginRequiredForBookingsPage": {},
+  "failedToLoadBookings": "Failed to load bookings: {error}",
+  "@failedToLoadBookings": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "startBookingMessage": "It looks like you haven't booked any travels yet. Let's find your next adventure!",
+  "@startBookingMessage": {},
+  "findNewTravels": "Find New Travels",
+  "@findNewTravels": {},
+  "bookingStatusPending": "Pending",
+  "@bookingStatusPending": {},
+  "bookingStatusConfirmed": "Confirmed",
+  "@bookingStatusConfirmed": {},
+  "bookingStatusCancelled": "Cancelled",
+  "@bookingStatusCancelled": {},
+  "bookingStatusFailed": "Failed",
+  "@bookingStatusFailed": {},
+  "sameLocationError": "Departure and destination locations cannot be the same.",
+  "@sameLocationError": {},
+  "noTravelsFoundSearch": "No travels found for your search.",
+  "@noTravelsFoundSearch": {},
+  "adjustSearchCriteria": "Try adjusting your locations or dates.",
+  "@adjustSearchCriteria": {},
+  "clearSearch": "Clear Search",
+  "@clearSearch": {},
+  "searchError": "Search failed: {errorMessage}",
+  "@searchError": {
+    "placeholders": {
+      "errorMessage": {}
+    }
+  },
+  "refreshBookings": "Refresh Bookings",
+  "@refreshBookings": {},
+  "to": "To",
+  "@to": {},
+  "travelDetailsSection": "Travel Details",
+  "@travelDetailsSection": {},
+  "payBy": "Pay By",
+  "@payBy": {},
+  "paymentDetails": "Payment Details",
+  "@paymentDetails": {},
+  "timeExpired": "Expired",
+  "@timeExpired": {},
+  "timeRemainingDays": "{days}d {hours}h {minutes}m {seconds}s",
+  "@timeRemainingDays": {
+    "placeholders": {
+      "days": {},
+      "hours": {},
+      "minutes": {},
+      "seconds": {}
+    }
+  },
+  "timeRemainingHours": "{hours}h {minutes}m {seconds}s",
+  "@timeRemainingHours": {
+    "placeholders": {
+      "hours": {},
+      "minutes": {},
+      "seconds": {}
+    }
+  },
+  "timeRemainingMinutes": "{minutes}m {seconds}s",
+  "@timeRemainingMinutes": {
+    "placeholders": {
+      "minutes": {},
+      "seconds": {}
+    }
+  },
+  "timeRemainingSeconds": "{seconds}s",
+  "@timeRemainingSeconds": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+  "notificationsTitle": "Notifications",
+  "@notificationsTitle": {},
+  "noTravellerIdError": "Traveller ID not available. Please log in to view notifications.",
+  "@noTravellerIdError": {},
+  "failedToLoadNotifications": "Failed to load notifications: {errorMessage}. Please try again.",
+  "@failedToLoadNotifications": {
+    "placeholders": {
+      "errorMessage": {}
+    }
+  },
+  "noNotificationsYet": "No Notifications Yet!",
+  "@noNotificationsYet": {},
+  "notificationEmptyMessage": "When you have new updates or alerts, they'll appear here.",
+  "@notificationEmptyMessage": {},
+  "markAsUnreadButton": "Mark as Unread",
+  "@markAsUnreadButton": {},
+  "closeButton": "Close",
+  "@closeButton": {},
+  "postedOn": "Posted On",
+  "@postedOn": {},
+  "errorLoadingNotifications": "Oops! Something went wrong.",
+  "@errorLoadingNotifications": {},
+  "tryAgainButton": "Try Again",
+  "@tryAgainButton": {},
+  "markReadFailed": "Failed to mark as read. Please try again.",
+  "@markReadFailed": {},
+  "markReadSuccess": "Notification marked as read.",
+  "@markReadSuccess": {},
+  "markReadLoginRequired": "Login required to mark notification as read.",
+  "@markReadLoginRequired": {},
+  "markReadError": "Error marking as read: {errorMessage}",
+  "@markReadError": {
+    "placeholders": {
+      "errorMessage": {}
+    }
+  },
+  "markUnreadFailed": "Failed to mark as unread. Please try again.",
+  "@markUnreadFailed": {},
+  "markUnreadSuccess": "Notification marked as unread.",
+  "@markUnreadSuccess": {},
+  "markUnreadLoginRequired": "Login required to mark notification as unread.",
+  "@markUnreadLoginRequired": {},
+  "markUnreadError": "Error marking as unread: {errorMessage}",
+  "@markUnreadError": {
+    "placeholders": {
+      "errorMessage": {}
+    }
+  },
+  "markAsReadButton": "Mark as Read",
+  "@markAsReadButton": {},
+  "userAlreadyExists": "A user with this email or phone number already exists.",
+  "@userAlreadyExists": {
+    "description": "Error message when a user tries to sign up with an email or phone number that is already registered.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "registrationPendingVerification": "Your registration is awaiting email verification. Please check your inbox.",
+  "@registrationPendingVerification": {
+    "description": "Informational message when a user has signed up but needs to verify their email address.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "signUpFailedGeneric": "Sign up failed. Please try again or contact support.",
+  "@signUpFailedGeneric": {
+    "description": "Generic error message when sign up fails due to an unhandled or unknown issue.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "travelerDetails": "Traveler Details",
+  "@travelerDetails": {
+    "description": "Heading for the section where user enters their details for booking.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "pleaseFillAllFields": "Please fill all required traveler details.",
+  "@pleaseFillAllFields": {
+    "description": "Error message shown when a form has required fields that are not filled.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "fullName": "Full Name",
+  "@fullName": {
+    "description": "Label for the traveler's full name.",
+    "type": "text",
+    "placeholders": {}
   }
 }

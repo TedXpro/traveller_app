@@ -13,9 +13,6 @@ class User {
   @JsonKey(name: 'last_name')
   String? lastName;
 
-  @JsonKey(name: 'login_preference')
-  String? loginPreference;
-
   @JsonKey(name: 'email')
   String? email;
 
@@ -41,7 +38,6 @@ class User {
     this.id,
     this.firstName,
     this.lastName,
-    this.loginPreference,
     this.email,
     this.phoneNumber,
     this.password,

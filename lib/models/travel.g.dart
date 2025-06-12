@@ -31,7 +31,7 @@ Travel _$TravelFromJson(Map<String, dynamic> json) => Travel(
   price: (json['price'] as num).toDouble(),
   totalSeats: (json['total_seats'] as num).toInt(),
   busRef: json['bus_ref'] as String?,
-  driverName: json['driver_name'] as String?,
+  driverId: json['driver_id'] as String?,
   postTime:
       json['post_time'] == null
           ? null
@@ -56,7 +56,7 @@ Map<String, dynamic> _$TravelToJson(Travel instance) => <String, dynamic>{
   'price': instance.price,
   'total_seats': instance.totalSeats,
   'bus_ref': instance.busRef,
-  'driver_name': instance.driverName,
+  'driver_id': instance.driverId,
   'post_time': instance.postTime?.toIso8601String(),
   'last_mod_time': instance.lastModTime?.toIso8601String(),
   'status': instance.status,

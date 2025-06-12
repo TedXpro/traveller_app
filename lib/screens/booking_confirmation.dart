@@ -57,6 +57,16 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
     );
   }
 
+  // Helper function to format DateTime for display using the desired format
+  String _formatDateTime(DateTime dateTime, AppLocalizations l10n) {
+    // Corrected format: "Thursday, May 22, 2025 10:30 AM" (or PM)
+    // l10n.localeName ensures the format is adapted to the user's locale (e.g., "en", "am")
+    return DateFormat(
+      'EEEE, MMMM d, yyyy hh:mm a', // CORRECTED: Changed PPPP to yyyy
+      l10n.localeName,
+    ).format(dateTime.toLocal());
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -124,59 +134,49 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
 
                   _buildDetailRow(
                     l10n.travelId,
-                    widget.booking.travelId
-                        .toString(), // Access booking via widget.booking
+                    widget.booking.travelId.toString(),
                     theme,
                   ),
                   // Display Booking Reference
                   _buildDetailRow(
                     l10n.bookingReference,
-                    widget.booking.bookingRef ??
-                        l10n.notAvailable, // Access booking via widget.booking
+                    widget.booking.bookingRef ?? l10n.notAvailable,
                     theme,
                   ),
+                  // Display 1-based seat number
                   _buildDetailRow(
                     l10n.seatNo,
-                    widget.booking.seatNo
-                        .toString(), // Access booking via widget.booking
+                    (widget.booking.seatNo).toString(),
                     theme,
                   ),
                   _buildDetailRow(
                     l10n.bookTime,
-                    widget.booking.bookTime !=
-                            null // Access booking via widget.booking
-                        ? DateFormat('yyyy-MM-dd HH:mm:ss').format(
-                          widget.booking.bookTime,
-                        ) // Access booking via widget.booking
+                    widget.booking.bookTime != null
+                        ? _formatDateTime(widget.booking.bookTime, l10n) // Now using the corrected helper
                         : l10n.notAvailable,
                     theme,
                   ),
                   _buildDetailRow(
                     l10n.paymentDue,
-                    widget.booking.bookTimeLimit !=
-                            null // Access booking via widget.booking
-                        ? DateFormat('yyyy-MM-dd HH:mm:ss').format(
-                          widget.booking.bookTimeLimit,
-                        ) // Access booking via widget.booking
+                    widget.booking.bookTimeLimit != null
+                        ? _formatDateTime(widget.booking.bookTimeLimit, l10n) // Now using the corrected helper
                         : l10n.notAvailable,
                     theme,
                   ),
                   _buildDetailRow(
                     l10n.paymentAmount,
-                    '${widget.booking.price.toStringAsFixed(2)} ${l10n.currencyETB}', // Access booking via widget.booking
+                    '${widget.booking.price.toStringAsFixed(2)} ${l10n.currencyETB}',
                     theme,
                   ),
                   _buildDetailRow(
                     l10n.paymentType,
-                    widget.booking.paymentType ??
-                        l10n.notAvailable, // Access booking via widget.booking
+                    widget.booking.paymentType ?? l10n.notAvailable,
                     theme,
                   ),
                   // Display generated Payment Reference (from the nested Payment struct)
                   _buildDetailRow(
                     l10n.paymentRef,
-                    widget.booking.paymentRef?.currentPaymentRef ??
-                        l10n.notAvailable, // Access nested paymentRef
+                    widget.booking.paymentRef?.currentPaymentRef ?? l10n.notAvailable,
                     theme,
                   ),
 
@@ -306,15 +306,14 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
                                   status: backendStatus,
                                 );
 
-                                BookingServices bookingServices =
-                                    BookingServices();
-
                                 print(
                                   '\n\t\tCalling updateBookingStatus with bookingRef: ${bookingStatusUpdate.bookingRef} and status: ${bookingStatusUpdate.status} \n\n',
                                 );
 
                                 Booking? updatedBooking;
                                 String? backendUpdateError;
+
+                                final bookingServices = BookingServices();
 
                                 try {
                                   updatedBooking = await bookingServices
@@ -354,14 +353,14 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
                                     MaterialPageRoute(
                                       builder:
                                           (context) => PaymentSuccessPage(
-                                            // Pass the updated booking if available, otherwise the original
-                                            booking:
-                                                updatedBooking ??
-                                                widget.booking,
-                                            // Pass the backend update error message
-                                            backendUpdateError:
-                                                backendUpdateError,
-                                          ),
+                                              // Pass the updated booking if available, otherwise the original
+                                              booking:
+                                                  updatedBooking ??
+                                                  widget.booking,
+                                              // Pass the backend update error message
+                                              backendUpdateError:
+                                                  backendUpdateError,
+                                            ),
                                     ),
                                     (Route<dynamic> route) =>
                                         false, // Remove all routes below success page

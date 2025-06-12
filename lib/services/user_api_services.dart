@@ -91,7 +91,7 @@ class UserService {
     }
   }
 
-  Future<User?> signup(User user) async {
+Future<User?> signup(User user) async {
     final url = Uri.parse('$baseUrl/api/register');
     try {
       final response = await http.post(
@@ -100,20 +100,41 @@ class UserService {
         body: jsonEncode(user.toJson()),
       );
 
+      // --- CRUCIAL CHANGE STARTS HERE ---
       if (response.statusCode == 201) {
         final Map<String, dynamic> userData = jsonDecode(response.body);
         return User.fromJson(userData);
       } else {
+        // Handle non-201 status codes. The backend sent an error response.
         print("Signup failed with status code: ${response.statusCode}");
-        print(
-          "Response body: ${response.body}",
-        ); // Print the response body for debugging
-        return null;
+        print("Response body: ${response.body}"); // Still useful for debugging
+
+        String errorMessage = 'An unknown error occurred.'; // Default message
+
+        try {
+          final Map<String, dynamic> errorData = jsonDecode(response.body);
+          if (errorData.containsKey('error') && errorData['error'] is String) {
+            errorMessage = errorData['error']; // Extract the 'error' field
+          } else {
+            // If the error structure is different, or 'error' is not a String
+            errorMessage = response.body; // Use the raw body as a fallback
+          }
+        } catch (jsonError) {
+          // If response.body is not valid JSON, use it as is
+          errorMessage = response.body;
+          print("Failed to decode error JSON: $jsonError");
+        }
+
+        // Throw an exception so the 'catch' block in SignUpPage can handle it
+        throw Exception(errorMessage);
       }
+      // --- CRUCIAL CHANGE ENDS HERE ---
     } catch (e) {
-      // Handle network or other errors
-      print("Signup error: $e");
-      return null;
+      // This catch block now primarily handles network errors (e.g., no internet)
+      // or re-throws the Exception thrown in the else block above.
+      print("Signup error in UserService: $e");
+      // Re-throw to propagate to the calling widget's try-catch (SignUpPage)
+      rethrow; // Use rethrow to preserve the original stack trace
     }
   }
 

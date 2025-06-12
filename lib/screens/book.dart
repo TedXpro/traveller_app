@@ -4,6 +4,7 @@ import 'package:traveller_app/models/agency.dart';
 import 'package:traveller_app/screens/travel_details.dart';
 import 'package:traveller_app/services/agency_api_services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:intl/intl.dart'; // NEW: Import the intl package
 
 class BookPage extends StatefulWidget {
   final List<Travel> travels;
@@ -198,9 +199,17 @@ class _BookPageState extends State<BookPage> {
 
   // Helper function to format DateTime for display
   String _formatDateTime(DateTime dateTime, AppLocalizations l10n) {
-    // You can customize this format based on your preference and localization needs
-    // For example, using intl package for more advanced formatting
-    return '${dateTime.toLocal().year}-${dateTime.toLocal().month.toString().padLeft(2, '0')}-${dateTime.toLocal().day.toString().padLeft(2, '0')} ${dateTime.toLocal().hour.toString().padLeft(2, '0')}:${dateTime.toLocal().minute.toString().padLeft(2, '0')}';
+    // NEW: Use DateFormat from intl package for user-friendly formatting
+    // For "Thursday May 22, 2025" format:
+    return DateFormat(
+      'EEEE MMMM d, yyyy',
+      l10n.localeName,
+    ).format(dateTime.toLocal());
+    // EEEE: Full weekday name (Thursday)
+    // MMMM: Full month name (May)
+    // d: Day of the month (22)
+    // yyyy: Four-digit year (2025)
+    // l10n.localeName ensures the format is adapted to the user's locale (e.g., "en", "am")
   }
 
   void _showFilterDialog(BuildContext context) {
