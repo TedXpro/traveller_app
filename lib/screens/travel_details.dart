@@ -604,7 +604,7 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
     return Container(
       padding: const EdgeInsets.all(16), // Increased padding
       decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant.withOpacity(
+        color: colorScheme.surfaceContainerHighest.withOpacity(
           0.3,
         ), // Lighter background for the seat layout area
         border: Border.all(color: colorScheme.outline.withOpacity(0.5)),
@@ -764,7 +764,7 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
             borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
           ),
           filled: true,
-          fillColor: theme.colorScheme.surfaceVariant.withOpacity(
+          fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(
             0.2,
           ), // Light fill
           contentPadding: const EdgeInsets.symmetric(

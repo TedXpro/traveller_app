@@ -611,7 +611,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     color:
                         notification.isRead
                             ? theme.cardColor
-                            : theme.colorScheme.surfaceVariant,
+                            : theme.colorScheme.surfaceContainerHighest,
                     child: ListTile(
                       leading: Stack(
                         alignment: Alignment.center,

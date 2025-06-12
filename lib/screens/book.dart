@@ -302,7 +302,7 @@ class _BookPageState extends State<BookPage> {
                           });
                         },
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
               );

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:traveller_app/providers/destination_provider.dart';
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/screens/destinations_list_page.dart';
+import 'package:traveller_app/screens/event.dart';
 import 'package:traveller_app/widgets/custom_app_bar.dart';
 import 'package:traveller_app/widgets/custom_nav_bar.dart';
 import 'package:traveller_app/screens/bookings.dart';
@@ -47,6 +48,7 @@ class _MainScreenState extends State<MainScreen> {
       const DestinationsListPage(), // Index 2: Destinations List Page
       // CheckInPage(), // If you uncomment this, ensure it's a const widget if possible
       const ProfilePage(), // Index 3: Profile Page
+      const EventPage(),
     ];
 
     // Reload data from providers

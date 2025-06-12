@@ -25,6 +25,7 @@ class CustomNavBar extends StatelessWidget {
           label: l10n.destinationsTitle,
         ),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: l10n.profile),
+        BottomNavigationBarItem(icon: Icon(Icons.event), label: l10n.events)
       ],
       currentIndex: selectedIndex,
       onTap: onItemTapped,

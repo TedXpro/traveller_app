@@ -1095,5 +1095,11 @@
     "description": "Error message when user enters unsual characters.",
     "type": "text",
     "placeholders": {}
+  },
+  "events": "Events",
+  "@events": {
+    "description": "Tab or section title for events.",
+    "type": "text",
+    "placeholders": {}
   }
 }

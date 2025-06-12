@@ -67,7 +67,7 @@ class _BookingsPageState extends State<BookingsPage> {
           .getBookingsForTraveler(user.id!);
 
       if (mounted) {
-        if (fetchedBookings == null || fetchedBookings.isEmpty) {
+        if (fetchedBookings.isEmpty) {
           setState(() {
             bookings = [];
           });
@@ -199,14 +199,13 @@ class _BookingsPageState extends State<BookingsPage> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (booking.travelId != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4.0),
-                              child: Text(
-                                l10n.travelIdDisplay(booking.travelId!),
-                                style: theme.textTheme.bodySmall,
-                              ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              l10n.travelIdDisplay(booking.travelId!),
+                              style: theme.textTheme.bodySmall,
                             ),
+                          ),
                           Padding(
                             padding: const EdgeInsets.only(top: 4.0),
                             child: Text(
