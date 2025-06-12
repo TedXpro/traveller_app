@@ -109,15 +109,20 @@ class BookingServices {
       id: booking.id, // Include the ID
       travelId: booking.travelId,
       travelerId: booking.travelerId,
+      firstName: booking.firstName,
+      lastName: booking.lastName,
+      email: booking.email,
+      phoneNumber: booking.phoneNumber,
       seatNo: booking.seatNo,
       tripType: booking.tripType,
       startLocation: booking.startLocation,
+      destination: booking.destination,
       price: booking.price,
       paymentType: booking.paymentType, // Keep existing payment type
       paymentRef: booking.paymentRef, // Keep existing payment ref
       bookTime: booking.bookTime,
       payTime: DateTime.now(), // Set payTime to now
-      bookTimeLimit: booking.bookTimeLimit,
+      bookTimeLimit: booking.bookTimeLimit, 
       status: 'confirmed', // Set status to 'confirmed'
     );
 

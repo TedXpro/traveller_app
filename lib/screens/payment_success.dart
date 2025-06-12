@@ -228,7 +228,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
                                   ),
                                   _buildDetailRow(
                                     l10n.seatNo,
-                                    _bookingDetails!.seatNo.toString(),
+                                    (_bookingDetails!.seatNo).toString(),
                                     theme,
                                   ),
                                   _buildDetailRow(

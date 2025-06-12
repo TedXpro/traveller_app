@@ -28,8 +28,8 @@ class Travel {
   final int totalSeats;
   @JsonKey(name: 'bus_ref')
   final String? busRef;
-  @JsonKey(name: 'driver_name')
-  final String? driverName;
+  @JsonKey(name: 'driver_id')
+  final String? driverId;
   @JsonKey(name: 'post_time')
   final DateTime? postTime;
   @JsonKey(name: 'last_mod_time')
@@ -50,7 +50,7 @@ class Travel {
     required this.price,
     required this.totalSeats,
     this.busRef,
-    this.driverName,
+    this.driverId,
     this.postTime,
     this.lastModTime,
     this.status,

@@ -13,6 +13,7 @@ import 'package:traveller_app/screens/profile.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -20,13 +21,8 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _pages = <Widget>[
-    HomePage(),
-    BookingsPage(),
-    DestinationsListPage(),
-    // CheckInPage(),
-    ProfilePage(),
-  ];
+  // REMOVED 'static const' to allow dynamic page creation with callbacks
+  late List<Widget> _pages; // Declared as late, initialized in initState
 
   void _onItemTapped(int index) {
     setState(() {
@@ -37,18 +33,37 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Initialize _pages here, passing the callback to BookingsPage
+    _pages = <Widget>[
+      const HomePage(), // Index 0: Home Page
+      BookingsPage(
+        // Index 1: Bookings Page
+        // Pass a callback function that will change the MainScreen's selected index
+        onNavigateToHome: () {
+          _onItemTapped(0); // Navigate to Home tab (assuming Home is index 0)
+        },
+      ),
+      const DestinationsListPage(), // Index 2: Destinations List Page
+      // CheckInPage(), // If you uncomment this, ensure it's a const widget if possible
+      const ProfilePage(), // Index 3: Profile Page
+    ];
+
     // Reload data from providers
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Reload data from providers
       // Use listen: false when calling methods in initState or postFrameCallback
       Provider.of<UserProvider>(context, listen: false).loadUserDataAndToken();
       Provider.of<DestinationProvider>(
         context,
         listen: false,
-      ).fetchDestinations().then((_) { // Chain .then() to execute after fetch completes
-         // Access the provider again (still with listen: false) to print the updated list
-         final destinationProvider = Provider.of<DestinationProvider>(context, listen: false);
-         print('Fetched Destinations: ${destinationProvider.destinations}');
+      ).fetchDestinations().then((_) {
+        // Chain .then() to execute after fetch completes
+        // Access the provider again (still with listen: false) to print the updated list
+        final destinationProvider = Provider.of<DestinationProvider>(
+          context,
+          listen: false,
+        );
+        print('Fetched Destinations: ${destinationProvider.destinations}');
       });
     });
   }
@@ -57,9 +72,11 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(),
-      body: Center(child: _pages.elementAt(_selectedIndex)),
+      body: Center(
+        // Use IndexedStack to preserve the state of tabs when switching
+        child: IndexedStack(index: _selectedIndex, children: _pages),
+      ),
       bottomNavigationBar: CustomNavBar(
-        // Use CustomNavBar
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
       ),
