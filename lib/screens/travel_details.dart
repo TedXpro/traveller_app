@@ -41,6 +41,9 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
+  // New: State variable to control the red highlight for user details form
+  bool _showUserExistsErrorHighlight = false;
+
   @override
   void initState() {
     super.initState();
@@ -154,6 +157,13 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
 
   Future<void> _bookTravel() async {
     final l10n = AppLocalizations.of(context)!;
+
+    // Reset highlight at the start of a new booking attempt
+    if (_showUserExistsErrorHighlight) {
+      setState(() {
+        _showUserExistsErrorHighlight = false;
+      });
+    }
 
     // Validate the new user details form
     if (!_userDetailsFormKey.currentState!.validate()) {
@@ -352,22 +362,43 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
         _fetchTakenSeats();
       }
     } catch (e) {
-      print('Error during booking process: $e');
+      print('Error during booking process: $e'); // For debugging
+
       if (!mounted) return; // Check mounted after async operation
-      ScaffoldMessenger.of(
-        context,
-      ).hideCurrentSnackBar(); // Hide booking loading
+
+      // Hide current loading snackbar
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      String friendlyMessage;
+      final String errorMessage = e.toString().toLowerCase();
+
+      // Specific error matching for "user already exists" from backend
+      if (errorMessage.contains('409 - {"error":"user already exists"}') ||
+          errorMessage.contains('user already exists')) {
+        // Broader match for safety
+        friendlyMessage = l10n.userAlreadyExistsForTravel; // New localized key
+        // Set highlight state
+        setState(() {
+          _showUserExistsErrorHighlight = true;
+          _isBooking = false; // Ensure booking state is reset
+        });
+        // Refresh the page data
+        _fetchAgencyName();
+        _fetchTakenSeats();
+      } else {
+        // Generic error message for other unexpected errors
+        friendlyMessage = l10n.failedToBookTravel(e.toString());
+        setState(() {
+          _isBooking = false; // Ensure booking state is reset
+        });
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.failedToBookTravel(e.toString())),
-          backgroundColor: Colors.red,
+          content: Text(friendlyMessage),
+          backgroundColor: Colors.red, // Or appropriate color
         ),
       );
-      setState(() {
-        _isBooking = false;
-      }); // Clear booking loading state
-      // Consider re-fetching taken seats on error
-      _fetchTakenSeats();
     }
   }
 
@@ -396,9 +427,9 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       // Use surface or card color for available seats
       backgroundColor = colorScheme.surface; // Use theme's surface color
       textColor = colorScheme.onSurface; // Color that contrasts with surface
-      borderColor = colorScheme.outline.withOpacity(
-        0.5,
-      ); // Lighter outline for available
+      borderColor = Theme.of(
+        context,
+      ).colorScheme.outline.withOpacity(0.5); // Lighter outline for available
     }
 
     return InkWell(
@@ -591,7 +622,7 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
     // Format: "Thursday, May 22, 2025 10:30 AM" (or PM)
     // l10n.localeName ensures the format is adapted to the user's locale (e.g., "en", "am")
     return DateFormat(
-      'EEEE, MMMM d, replete hh:mm a', // Corrected to 'yyyy'
+      'EEEE, MMMM d, yyyy hh:mm a', // Corrected 'replete' to 'yyyy' for year
       l10n.localeName,
     ).format(dateTime.toLocal());
   }
@@ -631,6 +662,14 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       key: _userDetailsFormKey,
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 16.0),
+        // Conditionally apply border for highlight
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+          side:
+              _showUserExistsErrorHighlight
+                  ? BorderSide(color: theme.colorScheme.error, width: 2.0)
+                  : BorderSide.none, // No border by default
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -639,7 +678,10 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
               Text(
                 l10n.travelerDetails, // Add this key to your app_en.arb etc.
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurface,
+                  color:
+                      _showUserExistsErrorHighlight
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -741,8 +783,9 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
             return l10n.validPhone;
           }
           // Basic name validation (non-empty is already covered)
+          // Removed specific validFirstName, using generic for names
           if (!isEmail && !isPhone && !isValidName(value.trim())) {
-            return l10n.validFirstName; // Reusing for general name validation
+            return l10n.validName; // New localization key
           }
           return null;
         },

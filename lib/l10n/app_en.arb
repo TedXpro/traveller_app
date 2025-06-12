@@ -1083,5 +1083,17 @@
     "description": "Label for the traveler's full name.",
     "type": "text",
     "placeholders": {}
+  },
+  "userAlreadyExistsForTravel": "Traveler details match an existing user. Please ensure the details are correct or sign in.",
+  "@userAlreadyExistsForTravel": {
+    "description": "Error message when booking with traveler details that match an already registered user.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "validName": "Please enter a valid name (letters, spaces, and hyphens only).",
+  "@validName": {
+    "description": "Error message when user enters unsual characters.",
+    "type": "text",
+    "placeholders": {}
   }
 }

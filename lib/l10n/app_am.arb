@@ -251,5 +251,7 @@
   "signUpFailedGeneric": "ምዝገባ አልተሳካም። እባክዎ እንደገና ይሞክሩ ወይም ድጋፍ ሰጪን ያግኙ።",
   "travelerDetails": "የተጓዥ ዝርዝሮች",
   "pleaseFillAllFields": "እባክዎ ሁሉንም አስፈላጊ የተጓዥ ዝርዝሮችን ይሙሉ።",
-  "fullName": "ሙሉ ስም"
+  "fullName": "ሙሉ ስም",
+  "userAlreadyExistsForTravel": "የተጓዥ ዝርዝሮች ካለ ተጠቃሚ ጋር ይመሳሰላሉ። እባክዎ ዝርዝሮቹ ትክክል መሆናቸውን ያረጋግጡ ወይም ይግቡ።",
+  "validName": "ትክክለኛ ስም ያስገቡ (ፊደሎች፣ ክፍተቶች እና ሰረዞች ብቻ)።"
 }

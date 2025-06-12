@@ -419,11 +419,6 @@ class _SignInPageState extends State<SignInPage> {
                         child: Text(l10n.signIn), // Localized
                       ),
                   const SizedBox(height: 20),
-                  // Use theme's text style for the 'or' separator
-                  Center(child: Text('or', style: theme.textTheme.bodyMedium)),
-                  const SizedBox(height: 10),
-                  _buildGoogleSignUpButton(l10n), // Pass l10n
-                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
