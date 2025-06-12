@@ -9,6 +9,7 @@ import 'package:traveller_app/screens/bookings.dart';
 import 'package:traveller_app/screens/check_in.dart';
 import 'package:traveller_app/screens/home.dart';
 import 'package:traveller_app/screens/profile.dart';
+import 'package:traveller_app/screens/event.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -24,6 +25,7 @@ class _MainScreenState extends State<MainScreen> {
     BookingsPage(),
     CheckInPage(),
     ProfilePage(),
+    EventPage()
   ];
 
   void _onItemTapped(int index) {

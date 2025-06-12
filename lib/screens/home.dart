@@ -1,10 +1,14 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:traveller_app/models/advertisement.dart';
 import 'package:traveller_app/models/destination.dart';
 import 'package:traveller_app/models/travel.dart';
 import 'package:traveller_app/providers/destination_provider.dart';
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/screens/book.dart';
+import 'package:traveller_app/services/advertisement_api_services.dart';
 import 'package:traveller_app/services/travel_api_service.dart';
 import 'package:traveller_app/utils/validation_utils.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -25,6 +29,22 @@ class _HomePageState extends State<HomePage> {
   String? errorMessage;
   String? departureLocationError;
   String? destinationLocationError;
+  int activeAdIndex = 0;
+
+  List<Advertisement> _advertisements = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize departure and destination locations if needed
+    initStateAsync();
+  }
+
+  void initStateAsync() async {
+    _advertisements = await AdvertisementApiServices().getAdvertisements();
+    print("adverts $_advertisements");
+    print(_advertisements[0].imageUrl + _advertisements[0].title);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +70,7 @@ class _HomePageState extends State<HomePage> {
                   _buildWelcomeText(l10n, context), // Pass context for theme
                   const SizedBox(height: 20),
                   _buildTripCard(l10n, context), // Pass context for theme
+                  _buildAdvertisementCarousel()
                 ],
               ),
             ),
@@ -58,6 +79,56 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  Widget _buildAdvertisementCarousel(){
+    return Container(
+      child: Column(
+        children: [
+          CarouselSlider.builder(
+            options: CarouselOptions(
+              height: 300,
+              autoPlay: true,
+              autoPlayInterval: const Duration(seconds: 3),
+              onPageChanged: (index, reason) => setState(() {
+                activeAdIndex = index;
+              }),
+            ),
+            itemCount: _advertisements.length,
+            itemBuilder: (context, index, realIndes){
+              final image = _advertisements[index].imageUrl;
+              return buildAdvertisementCard(image, index);
+            }
+          
+          ),
+
+          buildAdIndicator()
+        ],
+      )
+    );
+  }
+
+  Widget buildAdvertisementCard(String imageUrl, int index){
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 5.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8.0),
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.contain,
+          width: double.infinity,
+          height: 300,
+        ),
+      ),
+    );
+  }
+
+  Widget buildAdIndicator(){
+    return AnimatedSmoothIndicator(
+      activeIndex: activeAdIndex, 
+      count: _advertisements.length,
+    );
+  }
+
 
   Widget _buildWelcomeText(AppLocalizations l10n, BuildContext context) {
     final theme = Theme.of(context); // Get theme data

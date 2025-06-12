@@ -27,7 +27,7 @@ Future<List<Travel>> searchTravelsApi(
     queryParams['date_max'] = dateMax.toIso8601String().substring(0, 10);
   }
 
-  final response = await http.get(Uri.http(searchUrl, '/travels/search', queryParams));
+  final response = await http.get(Uri.https(searchUrl, '/travels/search', queryParams));
   print("here ${response.body}");
 
   if (response.statusCode == 200) {
