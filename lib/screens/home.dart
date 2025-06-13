@@ -12,6 +12,7 @@ import 'package:traveller_app/services/advertisement_api_services.dart';
 import 'package:traveller_app/services/travel_api_service.dart';
 import 'package:traveller_app/utils/validation_utils.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:intl/intl.dart'; // Import for DateFormat
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,6 +30,8 @@ class _HomePageState extends State<HomePage> {
   String? errorMessage;
   String? departureLocationError;
   String? destinationLocationError;
+  bool _hasSearchedAndNoResults = false; // NEW: State for showing no results UI
+
   int activeAdIndex = 0;
 
   List<Advertisement> _advertisements = [];
@@ -53,6 +56,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: Stack(
         children: [
+          // Background image
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -70,7 +74,12 @@ class _HomePageState extends State<HomePage> {
                   _buildWelcomeText(l10n, context), // Pass context for theme
                   const SizedBox(height: 20),
                   _buildTripCard(l10n, context), // Pass context for theme
-                  _buildAdvertisementCarousel()
+                  // NEW: Conditionally display no results message
+                  if (_hasSearchedAndNoResults) ...[
+                    const SizedBox(height: 40),
+                    _buildNoResultsMessage(l10n, context),
+                  ],
+                  _buildAdvertisementCarousel(),
                 ],
               ),
             ),
@@ -80,34 +89,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildAdvertisementCarousel(){
+  Widget _buildAdvertisementCarousel() {
     return Container(
       child: Column(
         children: [
           CarouselSlider.builder(
             options: CarouselOptions(
-              height: 300,
+              height: 100,
               autoPlay: true,
               autoPlayInterval: const Duration(seconds: 3),
-              onPageChanged: (index, reason) => setState(() {
-                activeAdIndex = index;
-              }),
+              onPageChanged:
+                  (index, reason) => setState(() {
+                    activeAdIndex = index;
+                  }),
             ),
             itemCount: _advertisements.length,
-            itemBuilder: (context, index, realIndes){
+            itemBuilder: (context, index, realIndes) {
               final image = _advertisements[index].imageUrl;
               return buildAdvertisementCard(image, index);
-            }
-          
+            },
           ),
 
-          buildAdIndicator()
+          buildAdIndicator(),
         ],
-      )
+      ),
     );
   }
 
-  Widget buildAdvertisementCard(String imageUrl, int index){
+  Widget buildAdvertisementCard(String imageUrl, int index) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 5.0),
       child: ClipRRect(
@@ -116,19 +125,18 @@ class _HomePageState extends State<HomePage> {
           imageUrl,
           fit: BoxFit.contain,
           width: double.infinity,
-          height: 300,
+          height: 100,
         ),
       ),
     );
   }
 
-  Widget buildAdIndicator(){
+  Widget buildAdIndicator() {
     return AnimatedSmoothIndicator(
-      activeIndex: activeAdIndex, 
+      activeIndex: activeAdIndex,
       count: _advertisements.length,
     );
   }
-
 
   Widget _buildWelcomeText(AppLocalizations l10n, BuildContext context) {
     final theme = Theme.of(context); // Get theme data
@@ -138,6 +146,9 @@ class _HomePageState extends State<HomePage> {
         return Text(
           l10n.welcome(userName),
           style: theme.textTheme.titleLarge?.copyWith(
+            // Customize text style for welcome message, e.g.,
+            // color: theme.colorScheme.onSurface,
+            // fontWeight: FontWeight.bold,
           ),
         );
       },
@@ -187,6 +198,7 @@ class _HomePageState extends State<HomePage> {
             setState(() {
               _departureLocation = value;
               departureLocationError = validateLocation(_departureLocation);
+              _hasSearchedAndNoResults = false; // Reset on new input
             });
           },
           errorText: departureLocationError,
@@ -201,6 +213,7 @@ class _HomePageState extends State<HomePage> {
               _destinationLocation = temp;
               departureLocationError = validateLocation(_departureLocation);
               destinationLocationError = validateLocation(_destinationLocation);
+              _hasSearchedAndNoResults = false; // Reset on new input
             });
           },
           child: Container(
@@ -226,6 +239,7 @@ class _HomePageState extends State<HomePage> {
             setState(() {
               _destinationLocation = value;
               destinationLocationError = validateLocation(_destinationLocation);
+              _hasSearchedAndNoResults = false; // Reset on new input
             });
           },
           errorText: destinationLocationError,
@@ -245,10 +259,7 @@ class _HomePageState extends State<HomePage> {
   }) {
     return DropdownButtonFormField<String>(
       value: value,
-      decoration: InputDecoration(
-        labelText: label,
-        errorText: errorText,
-      ),
+      decoration: InputDecoration(labelText: label, errorText: errorText),
       items:
           items.map((destination) {
             return DropdownMenuItem<String>(
@@ -273,6 +284,7 @@ class _HomePageState extends State<HomePage> {
                 setState(() {
                   _departureDate = date;
                   errorMessage = validateDates(_departureDate, _returnDate);
+                  _hasSearchedAndNoResults = false; // Reset on new input
                 });
               }),
             ),
@@ -284,6 +296,7 @@ class _HomePageState extends State<HomePage> {
                 setState(() {
                   _returnDate = date;
                   errorMessage = validateDates(_departureDate, _returnDate);
+                  _hasSearchedAndNoResults = false; // Reset on new input
                 });
               }),
             ),
@@ -309,7 +322,6 @@ class _HomePageState extends State<HomePage> {
     Function(DateTime?) onDateSelected,
   ) {
     final theme = Theme.of(context);
-    // To make this look like a themed input field, we can use InputDecorator
     return InkWell(
       onTap: () async {
         final selectedDate = await showDatePicker(
@@ -317,55 +329,43 @@ class _HomePageState extends State<HomePage> {
           initialDate: date ?? DateTime.now(),
           firstDate: DateTime.now(),
           lastDate: DateTime(2100),
-          // DatePicker theme is also controlled by ThemeData (dialogTheme, colorScheme)
         );
         if (selectedDate != null) {
           onDateSelected(selectedDate);
         }
       },
       child: InputDecorator(
-        // Wrap with InputDecorator to use theme's input field styling
         decoration: InputDecoration(
-          // Use properties from theme's inputDecorationTheme
-          // border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)), // Can keep specific border if needed
-          // enabledBorder, focusedBorder, fillColor etc. will come from the theme.
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ), // Adjust padding as needed
+          labelText: label, // Use labelText for the hint
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          // Ensure suffix icon is shown
+          suffixIcon:
+              date != null
+                  ? IconButton(
+                    icon: Icon(
+                      Icons.clear,
+                      size: 20,
+                      color: theme.iconTheme.color?.withOpacity(0.7),
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () {
+                      onDateSelected(null);
+                    },
+                  )
+                  : Icon(
+                    Icons.calendar_today,
+                    size: 20,
+                    color: theme.iconTheme.color?.withOpacity(0.7),
+                  ),
         ),
-        child: Row(
-          mainAxisAlignment:
-              MainAxisAlignment.spaceBetween, // Align text and icon
-          children: [
-            Text(
-              date == null ? label : "${date.toLocal()}".split(' ')[0],
-              // Text color will be inherited (should be light on dark theme)
-              style:
-                  date == null
-                      ? theme.inputDecorationTheme.hintStyle
-                      : theme.textTheme.bodyLarge,
-            ),
-            if (date != null)
-              IconButton(
-                icon: Icon(
-                  Icons.clear,
-                  size: 20,
-                  color: theme.iconTheme.color?.withOpacity(0.7),
-                ),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: () {
-                  onDateSelected(null);
-                },
-              )
-            else
-              Icon(
-                Icons.calendar_today,
-                size: 20,
-                color: theme.iconTheme.color?.withOpacity(0.7),
-              ), // Show calendar icon if no date
-          ],
+        // Display the selected date or label
+        child: Text(
+          date == null ? label : DateFormat('MMM d, yyyy').format(date),
+          style:
+              date == null
+                  ? theme.inputDecorationTheme.hintStyle
+                  : theme.textTheme.bodyLarge,
         ),
       ),
     );
@@ -373,7 +373,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildPassengersInput(AppLocalizations l10n, BuildContext context) {
     final theme = Theme.of(context);
-    // Text and Icon colors will be inherited from the theme
     return Row(
       children: [
         Text('${l10n.passengers}: ', style: theme.textTheme.bodyLarge),
@@ -383,7 +382,6 @@ class _HomePageState extends State<HomePage> {
               () => setState(
                 () => _passengers = (_passengers > 1) ? _passengers - 1 : 1,
               ),
-          // Icon color and splash from theme
         ),
         Text('$_passengers', style: theme.textTheme.titleMedium),
         IconButton(
@@ -395,14 +393,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildSearchButton(AppLocalizations l10n) {
-    // ElevatedButton will now use elevatedButtonTheme from your ThemeData
     return Center(
       child: ElevatedButton(
         onPressed: () async {
-          // ... your existing validation and navigation logic ...
-          departureLocationError = validateLocation(_departureLocation);
-          destinationLocationError = validateLocation(_destinationLocation);
-          errorMessage = validateDates(_departureDate, _returnDate);
+          // Reset error messages and no results flag at the start of a new search
+          setState(() {
+            departureLocationError = validateLocation(_departureLocation);
+            destinationLocationError = validateLocation(_destinationLocation);
+            errorMessage = validateDates(_departureDate, _returnDate);
+            _hasSearchedAndNoResults =
+                false; // Hide previous no results message
+          });
 
           if (departureLocationError != null ||
               destinationLocationError != null ||
@@ -410,8 +411,6 @@ class _HomePageState extends State<HomePage> {
               (_departureLocation != null &&
                   _destinationLocation != null &&
                   _departureLocation == _destinationLocation)) {
-            setState(() {});
-
             String snackBarMessage;
             if (departureLocationError != null) {
               snackBarMessage = departureLocationError!;
@@ -420,8 +419,7 @@ class _HomePageState extends State<HomePage> {
             } else if (errorMessage != null) {
               snackBarMessage = errorMessage!;
             } else {
-              snackBarMessage =
-                  'Departure and destination locations cannot be the same.';
+              snackBarMessage = l10n.sameLocationError; // NEW Localization key
             }
 
             ScaffoldMessenger.of(
@@ -439,26 +437,94 @@ class _HomePageState extends State<HomePage> {
             );
 
             if (travels.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('No travels found for the selected criteria.'),
-                ),
-              );
+              // Instead of a SnackBar, set the flag to display the custom UI
+              setState(() {
+                _hasSearchedAndNoResults = true;
+              });
+              // NO SNACKBAR HERE
             } else {
+              // If travels are found, navigate to BookPage
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => BookPage(travels: travels),
                 ),
               );
+              // Reset the no results flag in case a previous search had none
+              setState(() {
+                _hasSearchedAndNoResults = false;
+              });
             }
           } catch (e) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Error: $e')));
+            // Show general error message for API failures (e.g., network issues)
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.searchError(e.toString()))),
+            ); // NEW Localization key
+            setState(() {
+              _hasSearchedAndNoResults =
+                  false; // Don't show no results for technical errors
+            });
           }
         },
         child: Text(l10n.searchTravel),
+      ),
+    );
+  }
+
+  // NEW: Widget to display the no results message
+  Widget _buildNoResultsMessage(AppLocalizations l10n, BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.search_off, // A relevant icon
+            size: 80,
+            color: theme.colorScheme.onSurface.withOpacity(0.6),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.noTravelsFoundSearch, // "No travels found for your search."
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.8),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.adjustSearchCriteria, // "Try adjusting your locations or dates."
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () {
+              // Reset all search fields and the no results flag
+              setState(() {
+                _departureDate = null;
+                _returnDate = null;
+                _passengers = 1;
+                _departureLocation = null;
+                _destinationLocation = null;
+                errorMessage = null;
+                departureLocationError = null;
+                destinationLocationError = null;
+                _hasSearchedAndNoResults = false;
+              });
+            },
+            icon: const Icon(Icons.clear),
+            label: Text(l10n.clearSearch), // "Clear Search"
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,4 +1,3 @@
-
 part of 'events.dart';
 
 Event $_EventFromJson(Map<String, dynamic> json){

@@ -1,16 +1,16 @@
-// Import for json.decode
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart'; // Import the intl package for date formatting
 import 'package:traveller_app/models/booking.dart';
 import 'package:traveller_app/models/seat.dart';
 import 'package:traveller_app/models/travel.dart';
 import 'package:traveller_app/models/agency.dart';
 import 'package:traveller_app/screens/booking_confirmation.dart';
 import 'package:traveller_app/services/agency_api_services.dart';
-import 'package:traveller_app/services/booking_api_services.dart'; // Assuming this is your BookingServices file
+import 'package:traveller_app/services/booking_api_services.dart';
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:traveller_app/utils/validation_utils.dart'; // Ensure you have this utility for validation
 
 class TravelDetailsPage extends StatefulWidget {
   final Travel travel;
@@ -25,20 +25,58 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
   String agencyName = 'Loading...';
   final AgencyServices _agencyServices = AgencyServices();
   final Map<String, Agency> _agencyCache = {};
-  final BookingServices _bookingServices =
-      BookingServices(); // Use your BookingServices
-  List<bool> seatStatusBooleans = []; // Store the raw boolean list from backend
-  // Removed takenSeats list as we are now using the boolean list directly for display
-  // List<int> takenSeats = []; // Store the list of taken seat numbers (1-based)
-  int? selectedSeat; // Store the 0-based index of the selected seat
+  final BookingServices _bookingServices = BookingServices();
+  List<bool> seatStatusBooleans = [];
+  int?
+  selectedSeat; // Stores the 0-based index of the selected seat (e.g., 0 for seat 1, 1 for seat 2)
   bool _isLoadingSeats = true; // Loading state for fetching taken seats
   bool _isBooking = false; // Loading state for the booking process
+
+  // Form Key for the new user details form
+  final _userDetailsFormKey = GlobalKey<FormState>();
+
+  // Controllers for user details
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+
+  // New: State variable to control the red highlight for user details form
+  bool _showUserExistsErrorHighlight = false;
 
   @override
   void initState() {
     super.initState();
     _fetchAgencyName();
     _fetchTakenSeats(); // Fetch taken seats when the page initializes
+    _prefillUserDetails(); // New: Prefill user details
+  }
+
+  // New method to prefill user details from UserProvider
+  void _prefillUserDetails() {
+    // We use Future.microtask to ensure that the Provider is available
+    // and context is ready after the first build cycle.
+    Future.microtask(() {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final userData = userProvider.userData;
+
+      if (userData != null) {
+        _firstNameController.text = userData.firstName ?? '';
+        _lastNameController.text = userData.lastName ?? '';
+        _emailController.text = userData.email ?? '';
+        _phoneController.text = userData.phoneNumber ?? '';
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // Dispose controllers for user details
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchAgencyName() async {
@@ -118,11 +156,29 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
   }
 
   Future<void> _bookTravel() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    // Reset highlight at the start of a new booking attempt
+    if (_showUserExistsErrorHighlight) {
+      setState(() {
+        _showUserExistsErrorHighlight = false;
+      });
+    }
+
+    // Validate the new user details form
+    if (!_userDetailsFormKey.currentState!.validate()) {
+      // If validation fails, show a snackbar or just let the validators highlight errors
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.pleaseFillAllFields)));
+      return;
+    }
+
     // selectedSeat now holds the 0-based index
     if (selectedSeat == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSelectSeat)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectSeat)));
       return;
     }
 
@@ -132,11 +188,9 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
 
     if (travelerId == null) {
       // Show error or navigate to login if user is required
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.loginRequiredForBooking),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.loginRequiredForBooking)));
       // TODO: Optionally navigate to login page
       return;
     }
@@ -147,17 +201,17 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
     }
 
     // Check if the selected seat (using 0-based index) is already taken
-    if (selectedSeat! >= 0 &&
+    // Ensure selectedSeat is within bounds before accessing seatStatusBooleans
+    if (selectedSeat != null &&
+        selectedSeat! >= 0 &&
         selectedSeat! < seatStatusBooleans.length &&
         seatStatusBooleans[selectedSeat!]) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              // Display 1-based seat number in the message
-              AppLocalizations.of(
-                context,
-              )!.paymentError('Seat ${selectedSeat! + 1} is already taken.'),
+              // Display 1-based seat number in the message for the user
+              l10n.paymentError('Seat ${selectedSeat! + 1} is already taken.'),
             ), // Use a localized message
             backgroundColor: Colors.orange, // Indicate a warning/info
           ),
@@ -176,7 +230,7 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       // Show a loading indicator or message for the booking process
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.bookingTravel),
+          content: Text(l10n.bookingTravel),
           duration: const Duration(
             seconds: 30,
           ), // Show for a reasonable duration
@@ -194,31 +248,33 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       Seat seatToChoose = Seat(
         travelId: widget.travel.id,
         travelerId: travelerId,
-        seatNo: selectedSeat!, // Use the 0-based selectedSeat index
+        seatNo: selectedSeat! + 1, // Sending 1-based seat number to backend
         maxTime: bookTimeLimit, // Pass the same time limit
+      );
+
+      print(
+        "Sending 1-based seat number to backend (chooseSeat): ${selectedSeat! + 1}",
       );
 
       bool seatChosenSuccess = await _bookingServices.chooseSeat(seatToChoose);
 
+      if (!mounted) return; // Check mounted after async operation
+
       if (!seatChosenSuccess) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).hideCurrentSnackBar(); // Hide booking loading
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(
-                  context,
-                )!.paymentError('Failed to choose seat. It might be taken.'),
-              ), // Generic error for now
-              backgroundColor: Colors.red,
-            ),
-          );
-          setState(() {
-            _isBooking = false;
-          }); // Clear booking loading state
-        }
+        ScaffoldMessenger.of(
+          context,
+        ).hideCurrentSnackBar(); // Hide booking loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.paymentError('Failed to choose seat. It might be taken.'),
+            ), // Generic error for now
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isBooking = false;
+        }); // Clear booking loading state
         _fetchTakenSeats(); // Re-fetch seats to show updated status
         return; // Stop if choosing seat failed
       }
@@ -229,9 +285,21 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
         bookingRef: '', // Backend will generate bookingRef
         travelId: widget.travel.id,
         travelerId: travelerId,
-        seatNo: selectedSeat!, // Use the 0-based selectedSeat index
+        // Pass the updated user details from the form controllers
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        email:
+            _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
+        phoneNumber:
+            _phoneController.text.trim().isEmpty
+                ? null
+                : _phoneController.text.trim(),
+        seatNo: selectedSeat! + 1, // Sending 1-based seat number to backend
         tripType: 'One-way', // Assuming 'One-way' for now
         startLocation: widget.travel.startLocation,
+        destination: widget.travel.destination,
         price: widget.travel.price,
         bookTime: now,
         payTime: null,
@@ -240,89 +308,103 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       );
 
       print(
-        "Attempting to book travel with details: ${bookingToBook.toJson()}",
+        "Sending 1-based seat number to backend (bookTravel): ${bookingToBook.toJson()}",
       );
       // The bookTravel method should return the created Booking object from the backend
       Booking? createdBooking = await _bookingServices.bookTravel(
         bookingToBook,
       );
 
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).hideCurrentSnackBar(); // Hide booking loading
-        setState(() {
-          _isBooking = false;
-        }); // Clear booking loading state
-      }
+      if (!mounted) return; // Check mounted after async operation
+
+      ScaffoldMessenger.of(
+        context,
+      ).hideCurrentSnackBar(); // Hide booking loading
+      setState(() {
+        _isBooking = false;
+      }); // Clear booking loading state
 
       if (createdBooking != null) {
         print("Booking created successfully: ${createdBooking.toJson()}");
         // Booking successful, navigate to confirmation page with the created booking
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                // Display 1-based seat number in success message
-                AppLocalizations.of(context)!.seatChosen(selectedSeat! + 1),
-              ), // Use selected seat in message
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (context) => BookingConfirmationPage(
-                    booking: createdBooking,
-                  ), // Pass the created booking
-            ),
-          );
-        }
-      } else {
-        // Booking failed
-        print("Booking API returned null after chooseSeat was successful.");
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(context)!.failedToBookTravel(
-                  'Booking API returned null.',
-                ), // Generic error
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
-          // Consider re-fetching taken seats as the seat might not be booked
-          _fetchTakenSeats();
-        }
-      }
-    } catch (e) {
-      print('Error during booking process: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).hideCurrentSnackBar(); // Hide booking loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.failedToBookTravel(e.toString()),
+              // Display 1-based seat number in success message for the user
+              l10n.seatChosen(selectedSeat! + 1),
+            ), // Use selected seat in message
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => BookingConfirmationPage(
+                  booking: createdBooking,
+                ), // Pass the created booking
+          ),
+        );
+      } else {
+        // Booking failed
+        print("Booking API returned null after chooseSeat was successful.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.failedToBookTravel(
+                'Booking API returned null.',
+              ), // Generic error
             ),
             backgroundColor: Colors.red,
           ),
         );
-        setState(() {
-          _isBooking = false;
-        }); // Clear booking loading state
-        // Consider re-fetching taken seats on error
+        // Consider re-fetching taken seats as the seat might not be booked
         _fetchTakenSeats();
       }
+    } catch (e) {
+      print('Error during booking process: $e'); // For debugging
+
+      if (!mounted) return; // Check mounted after async operation
+
+      // Hide current loading snackbar
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      String friendlyMessage;
+      final String errorMessage = e.toString().toLowerCase();
+
+      // Specific error matching for "user already exists" from backend
+      if (errorMessage.contains('409 - {"error":"user already exists"}') ||
+          errorMessage.contains('user already exists')) {
+        // Broader match for safety
+        friendlyMessage = l10n.userAlreadyExistsForTravel; // New localized key
+        // Set highlight state
+        setState(() {
+          _showUserExistsErrorHighlight = true;
+          _isBooking = false; // Ensure booking state is reset
+        });
+        // Refresh the page data
+        _fetchAgencyName();
+        _fetchTakenSeats();
+      } else {
+        // Generic error message for other unexpected errors
+        friendlyMessage = l10n.failedToBookTravel(e.toString());
+        setState(() {
+          _isBooking = false; // Ensure booking state is reset
+        });
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(friendlyMessage),
+          backgroundColor: Colors.red, // Or appropriate color
+        ),
+      );
     }
   }
 
   // Widget to build a simple representation of a seat
   Widget _buildSeat(
-    int seatIndex, // 0-based index
+    int seatIndex, // 0-based index (e.g., 0, 1, 2...)
     bool isTaken, // Now directly passed from the boolean list
     bool isSelected,
     ColorScheme colorScheme,
@@ -345,9 +427,9 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       // Use surface or card color for available seats
       backgroundColor = colorScheme.surface; // Use theme's surface color
       textColor = colorScheme.onSurface; // Color that contrasts with surface
-      borderColor = colorScheme.outline.withOpacity(
-        0.5,
-      ); // Lighter outline for available
+      borderColor = Theme.of(
+        context,
+      ).colorScheme.outline.withOpacity(0.5); // Lighter outline for available
     }
 
     return InkWell(
@@ -363,29 +445,39 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
                 });
               },
       child: Container(
-        width: 35, // Smaller seat size
-        height: 40, // Adjust size as needed
-        margin: const EdgeInsets.all(4), // Add some margin around seats
+        width: 45, // Adjusted seat size for better touch target
+        height: 45, // Adjusted size as needed
+        margin: const EdgeInsets.all(6), // Increased margin around seats
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(8), // Rounded corners for seats
-          border: Border.all(color: borderColor, width: 1),
+          borderRadius: BorderRadius.circular(
+            10,
+          ), // More rounded corners for seats
+          border: Border.all(
+            color: borderColor,
+            width: 1.5,
+          ), // Slightly thicker border
           boxShadow:
               isSelected && !isTaken && !_isBooking
                   ? [
                     // Add a subtle shadow to selected seats
                     BoxShadow(
                       color: colorScheme.primary.withOpacity(0.5),
-                      blurRadius: 5,
-                      offset: const Offset(0, 2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
                     ),
                   ]
                   : null,
         ),
         child: Text(
-          (seatIndex).toString(), // Display 0-based index
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+          (seatIndex + 1)
+              .toString(), // Display 1-based index for users (e.g., 1, 2, 3...)
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
         ),
       ),
     );
@@ -407,14 +499,16 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
     if (totalSeats == 0) {
       return Center(
         child: Text(
-          AppLocalizations.of(context)!.paymentError('No seat data available.'),
-        ), // Localized message
+          l10n.paymentError('No seat data available.'), // Localized message
+          textAlign: TextAlign.center,
+          style: TextStyle(color: colorScheme.error),
+        ),
       );
     }
 
     List<Widget> rows = [];
 
-    // Add driver position row
+    // Add driver position row (aligned to right)
     rows.add(
       Align(
         alignment: Alignment.centerRight,
@@ -422,7 +516,10 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
           padding: const EdgeInsets.only(right: 20.0, bottom: 10.0),
           child: Text(
             l10n.driver,
-            style: Theme.of(context).textTheme.bodySmall,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontStyle: FontStyle.italic,
+              color: Colors.grey[700],
+            ),
           ), // Localize "Driver"
         ),
       ),
@@ -438,37 +535,42 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
       i += 4
     ) {
       rows.add(
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center, // Center the row
-          children: [
-            _buildSeat(
-              i,
-              seatStatusBooleans[i],
-              selectedSeat == i,
-              colorScheme,
-            ),
-            _buildSeat(
-              i + 1,
-              seatStatusBooleans[i + 1],
-              selectedSeat == i + 1,
-              colorScheme,
-            ),
-            const SizedBox(
-              width: 30,
-            ), // Aisle space (increased for better visual)
-            _buildSeat(
-              i + 2,
-              seatStatusBooleans[i + 2],
-              selectedSeat == i + 2,
-              colorScheme,
-            ),
-            _buildSeat(
-              i + 3,
-              seatStatusBooleans[i + 3],
-              selectedSeat == i + 3,
-              colorScheme,
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: 4.0,
+          ), // Add vertical spacing between rows
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center, // Center the row
+            children: [
+              _buildSeat(
+                i,
+                seatStatusBooleans[i],
+                selectedSeat == i,
+                colorScheme,
+              ),
+              _buildSeat(
+                i + 1,
+                seatStatusBooleans[i + 1],
+                selectedSeat == i + 1,
+                colorScheme,
+              ),
+              const SizedBox(
+                width: 40,
+              ), // Aisle space (increased for better visual)
+              _buildSeat(
+                i + 2,
+                seatStatusBooleans[i + 2],
+                selectedSeat == i + 2,
+                colorScheme,
+              ),
+              _buildSeat(
+                i + 3,
+                seatStatusBooleans[i + 3],
+                selectedSeat == i + 3,
+                colorScheme,
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -487,18 +589,26 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
         );
       }
       rows.add(
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center, // Center the row
-          children: lastRowSeats,
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: 4.0,
+          ), // Add vertical spacing for last row
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center, // Center the row
+            children: lastRowSeats,
+          ),
         ),
       );
     }
 
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(16), // Increased padding
       decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withOpacity(
+          0.3,
+        ), // Lighter background for the seat layout area
         border: Border.all(color: colorScheme.outline.withOpacity(0.5)),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(15), // More rounded container
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch, // Stretch to fill width
@@ -507,130 +617,14 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    // Access the current theme data
-    final theme = Theme.of(context);
-    // Access the color scheme for dynamic colors
-    final colorScheme = theme.colorScheme;
-
-    return Scaffold(
-      // AppBar styling will pick up theme.appBarTheme automatically
-      appBar: AppBar(
-        title: Text(l10n.travelDetails),
-        // Title text color will use theme.appBarTheme.foregroundColor or titleTextStyle
-        // Background color will use theme.appBarTheme.backgroundColor
-      ),
-      body: SingleChildScrollView(
-        // Use SingleChildScrollView if content might exceed screen height
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.agency(agencyName),
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                // Use color scheme primary color
-                color: colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Card styling will pick up theme.cardTheme automatically
-            Card(
-              // Removed hardcoded elevation and shape to use theme.cardTheme
-              // elevation: 4,
-              // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDetailRow(
-                      l10n.startLocation,
-                      widget.travel.startLocation,
-                      theme, // Pass theme for text styling
-                    ),
-                    _buildDetailRow(
-                      l10n.destination,
-                      widget.travel.destination,
-                      theme, // Pass theme
-                    ),
-                    _buildDetailRow(
-                      l10n.priceDisplay,
-                      '\$${widget.travel.price.toStringAsFixed(2)}',
-                      theme, // Pass theme
-                    ),
-                    _buildDetailRow(
-                      l10n.departure,
-                      DateFormat(
-                        'MMM d, BBBB HH:mm', // Corrected date format pattern
-                      ).format(widget.travel.plannedStartTime),
-                      theme, // Pass theme
-                    ),
-                    _buildDetailRow(
-                      l10n.arrival,
-                      widget.travel.estArrivalTime != null
-                          ? DateFormat(
-                            'MMM d, BBBB HH:mm', // Corrected date format pattern
-                          ).format(widget.travel.estArrivalTime!)
-                          : l10n.notAvailable,
-                      theme, // Pass theme
-                    ),
-                    _buildDetailRow(
-                      l10n.driver,
-                      widget.travel.driverName ?? l10n.notAssigned,
-                      theme, // Pass theme
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            Text(
-              l10n.selectYourSeat, // Add localization key
-              style:
-                  theme.textTheme.titleMedium, // Use theme's title medium style
-            ),
-            const SizedBox(height: 16),
-
-            // Display the bus seat layout
-            _buildBusSeatLayout(colorScheme),
-
-            const SizedBox(height: 20),
-
-            Center(
-              // ElevatedButton styling will pick up theme.elevatedButtonTheme automatically
-              child: ElevatedButton(
-                onPressed:
-                    selectedSeat == null ||
-                            _isBooking // Disable if no seat selected or booking in progress
-                        ? null
-                        : _bookTravel, // Disable if no seat selected
-                // Removed hardcoded style to use theme.elevatedButtonTheme
-                // style: ElevatedButton.styleFrom(...),
-                child:
-                    _isBooking // Show loading indicator on button if booking
-                        ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color:
-                                colorScheme
-                                    .onPrimary, // Match button text color
-                            strokeWidth: 3,
-                          ),
-                        )
-                        : Text(l10n.bookNow),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  // Helper function to format DateTime for display using the desired format
+  String _formatDateTime(DateTime dateTime, AppLocalizations l10n) {
+    // Format: "Thursday, May 22, 2025 10:30 AM" (or PM)
+    // l10n.localeName ensures the format is adapted to the user's locale (e.g., "en", "am")
+    return DateFormat(
+      'EEEE, MMMM d, yyyy hh:mm a', // Corrected 'replete' to 'yyyy' for year
+      l10n.localeName,
+    ).format(dateTime.toLocal());
   }
 
   // Pass Theme or ColorScheme to the detail row builder
@@ -642,26 +636,264 @@ class _TravelDetailsPageState extends State<TravelDetailsPage> {
         children: [
           Text(
             label,
-            // Use theme's text style or colorScheme for contrast
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color:
-                  theme
-                      .colorScheme
-                      .onSurface, // Color that contrasts with card/surface
+              color: theme.colorScheme.onSurface,
             ),
           ),
-          Text(
-            value,
-            // Use theme's text style or colorScheme for contrast
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color:
-                  theme
-                      .colorScheme
-                      .onSurface, // Color that contrasts with card/surface
+          Flexible(
+            // Added Flexible to prevent overflow of long values
+            child: Text(
+              value,
+              textAlign: TextAlign.end, // Align value to the right
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // New _buildUserDetailsForm method for the new form
+  Widget _buildUserDetailsForm(AppLocalizations l10n, ThemeData theme) {
+    return Form(
+      key: _userDetailsFormKey,
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 16.0),
+        // Conditionally apply border for highlight
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+          side:
+              _showUserExistsErrorHighlight
+                  ? BorderSide(color: theme.colorScheme.error, width: 2.0)
+                  : BorderSide.none, // No border by default
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.travelerDetails, // Add this key to your app_en.arb etc.
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color:
+                      _showUserExistsErrorHighlight
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Divider(height: 24),
+              // Reusing _buildInputField for consistency
+              _buildDetailInputField(
+                l10n.firstName,
+                _firstNameController,
+                l10n,
+                theme,
+              ),
+              _buildDetailInputField(
+                l10n.lastName,
+                _lastNameController,
+                l10n,
+                theme,
+              ),
+              _buildDetailInputField(
+                l10n.email,
+                _emailController,
+                l10n,
+                theme,
+                isEmail: true,
+              ),
+              _buildDetailInputField(
+                l10n.phoneNumber,
+                _phoneController,
+                l10n,
+                theme,
+                isPhone: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // A slightly modified input field builder for the details form
+  // to better integrate with the card's visual style and specific validation needs.
+  Widget _buildDetailInputField(
+    String label,
+    TextEditingController controller,
+    AppLocalizations l10n,
+    ThemeData theme, {
+    bool isEmail = false,
+    bool isPhone = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: controller,
+        keyboardType:
+            isEmail
+                ? TextInputType.emailAddress
+                : (isPhone ? TextInputType.phone : TextInputType.text),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: theme.textTheme.bodyMedium, // Use theme's text style
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10), // Rounded corners
+            borderSide: BorderSide(color: theme.colorScheme.outline),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+              color: theme.colorScheme.outline.withOpacity(0.7),
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: theme.colorScheme.error),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
+          ),
+          filled: true,
+          fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(
+            0.2,
+          ), // Light fill
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 12,
+            horizontal: 16,
+          ), // Adjust padding
+        ),
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) {
+            return l10n.thisFieldRequired;
+          }
+          if (isEmail && !isValidEmail(value.trim())) {
+            return l10n.validEmail;
+          }
+          if (isPhone && !isValidPhoneNumber(value.trim())) {
+            return l10n.validPhone;
+          }
+          // Basic name validation (non-empty is already covered)
+          // Removed specific validFirstName, using generic for names
+          if (!isEmail && !isPhone && !isValidName(value.trim())) {
+            return l10n.validName; // New localization key
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.travelDetails)),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.agency(agencyName),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDetailRow(
+                      l10n.startLocation,
+                      widget.travel.startLocation,
+                      theme,
+                    ),
+                    _buildDetailRow(
+                      l10n.destination,
+                      widget.travel.destination,
+                      theme,
+                    ),
+                    _buildDetailRow(
+                      l10n.priceDisplay,
+                      '\$${widget.travel.price.toStringAsFixed(2)}',
+                      theme,
+                    ),
+                    _buildDetailRow(
+                      l10n.departure,
+                      _formatDateTime(widget.travel.plannedStartTime, l10n),
+                      theme,
+                    ),
+                    _buildDetailRow(
+                      l10n.arrival,
+                      widget.travel.estArrivalTime != null
+                          ? _formatDateTime(widget.travel.estArrivalTime!, l10n)
+                          : l10n.notAvailable,
+                      theme,
+                    ),
+                    _buildDetailRow(
+                      l10n.pickupLocations,
+                      widget.travel.pickupLocations.join(', '),
+                      theme,
+                    ),
+                    _buildDetailRow(
+                      l10n.busReference,
+                      widget.travel.busRef ?? l10n.notAvailable,
+                      theme,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // NEW: User Details Form
+            _buildUserDetailsForm(l10n, theme),
+            const SizedBox(height: 20),
+
+            Text(l10n.selectYourSeat, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 16),
+
+            _buildBusSeatLayout(colorScheme),
+
+            const SizedBox(height: 20),
+
+            Center(
+              child: ElevatedButton(
+                onPressed:
+                    selectedSeat == null || _isBooking ? null : _bookTravel,
+                child:
+                    _isBooking
+                        ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: colorScheme.onPrimary,
+                            strokeWidth: 3,
+                          ),
+                        )
+                        : Text(l10n.bookNow),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

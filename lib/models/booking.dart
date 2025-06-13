@@ -17,12 +17,22 @@ class Booking {
   final String travelId;
   @JsonKey(name: 'traveler_id')
   final String travelerId;
+  @JsonKey(name: 'first_name')
+  final String? firstName;
+  @JsonKey(name: 'last_name')
+  final String? lastName;
+  @JsonKey(name: 'email')
+  final String? email;
+  @JsonKey(name: 'phone_number')
+  final String? phoneNumber;
   @JsonKey(name: 'seat_no')
   final int seatNo;
   @JsonKey(name: 'trip_type')
   final String tripType;
   @JsonKey(name: 'start_location')
   final String startLocation;
+  @JsonKey(name: 'destination')
+  final String destination;
   @JsonKey(name: 'price')
   final double price;
   @JsonKey(name: 'payment_type')
@@ -43,9 +53,14 @@ class Booking {
     this.bookingRef, // Added to constructor
     required this.travelId,
     required this.travelerId,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.phoneNumber,
     required this.seatNo,
     required this.tripType,
     required this.startLocation,
+    required this.destination,
     required this.price,
     this.paymentType,
     this.paymentRef, // Updated constructor

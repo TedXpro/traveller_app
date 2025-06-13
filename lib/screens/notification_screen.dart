@@ -1,21 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
-import 'package:traveller_app/models/notification.dart';
+import 'package:traveller_app/models/notification.dart'; // Import your CustomNotification model
 import 'package:traveller_app/providers/user_provider.dart';
-import 'package:traveller_app/services/notification_api_services.dart'; // Import your models
+import 'package:traveller_app/services/notification_api_services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:intl/intl.dart'; // For date formatting
+
+// Ensure your CustomNotification model has 'id', 'title', 'message', 'postTime', 'status' fields.
+// Example:
+// class CustomNotification {
+//   final String id;
+//   final String title;
+//   final String message;
+//   final DateTime postTime;
+//   final String status; // 'read' or 'unread'
+//
+//   CustomNotification({
+//     required this.id,
+//     required this.title,
+//     required this.message,
+//     required this.postTime,
+//     required this.status,
+//   });
+//
+//   // Example fromJson if you're using json_serializable or manual parsing
+//   factory CustomNotification.fromJson(Map<String, dynamic> json) {
+//     return CustomNotification(
+//       id: json['id'] as String,
+//       title: json['title'] as String,
+//       message: json['message'] as String,
+//       postTime: DateTime.parse(json['postTime'] as String), // Adjust based on your API's date format
+//       status: json['status'] as String,
+//     );
+//   }
+//   Map<String, dynamic> toJson() => {
+//     'id': id,
+//     'title': title,
+//     'message': message,
+//     'postTime': postTime.toIso8601String(),
+//     'status': status,
+//   };
+// }
 
 class NotificationItem {
   final CustomNotification customNotification;
 
   NotificationItem({required this.customNotification});
 
-  bool get isRead => customNotification.status == 'read';
+  // Ensure status is always compared in lowercase for consistency
+  bool get isRead => customNotification.status.toLowerCase() == 'read';
   String get title => customNotification.title;
   String get body => customNotification.message;
   String get id => customNotification.id;
-  DateTime get postTime =>
-      customNotification.postTime; // Add getter for postTime for sorting
+  DateTime get postTime => customNotification.postTime;
 }
 
 class NotificationScreen extends StatefulWidget {
@@ -34,42 +72,37 @@ class NotificationScreen extends StatefulWidget {
 
 class _NotificationScreenState extends State<NotificationScreen> {
   List<NotificationItem> _notifications = [];
-  bool _isLoading = true; // State to track loading
-  String? _error; // State to track errors
+  bool _isLoading = true;
+  String? _error;
 
   late UserProvider userProvider;
-  late String? _currentTravellerId;
-  late String? _jwtToken;
+  String? _currentTravellerId;
+  String? _jwtToken;
 
   @override
   void initState() {
     super.initState();
-    // Make sure context is available for Provider.of
     WidgetsBinding.instance.addPostFrameCallback((_) {
       userProvider = Provider.of<UserProvider>(context, listen: false);
       final user = userProvider.userData;
-      _currentTravellerId = user?.id; // Use nullable access
+      _currentTravellerId = user?.id;
       _jwtToken = userProvider.jwtToken;
 
-      // Only load from backend if traveller ID is available
       if (_currentTravellerId != null && _currentTravellerId!.isNotEmpty) {
-        _loadNotificationsFromBackend(); // Load from backend first
+        _loadNotificationsFromBackend();
       } else {
         setState(() {
           _isLoading = false;
-          _error = "Traveller ID not available. Cannot load notifications.";
+          _error = AppLocalizations.of(context)!.noTravellerIdError;
         });
         print("Traveller ID is null or empty, cannot load notifications.");
       }
 
-      // Handle initial message if the app was opened from a terminated state
       _handleInitialMessage();
-      // Listen for foreground messages
       _listenForForegroundNotifications();
     });
   }
 
-  // Function to handle the initial message that opened the app from terminated state
   Future<void> _handleInitialMessage() async {
     RemoteMessage? initialMessage =
         await FirebaseMessaging.instance.getInitialMessage();
@@ -80,364 +113,481 @@ class _NotificationScreenState extends State<NotificationScreen> {
       );
 
       if (mounted) {
-        // Check if the widget is still mounted before setState
-        setState(() {
-          // Example: Add locally if not already present (basic check)
-          final basicNotification = CustomNotification(
-            id:
-                initialMessage.messageId ??
-                DateTime.now().millisecondsSinceEpoch
-                    .toString(), // Use messageId or generate
-            title: initialMessage.notification!.title ?? 'New Notification',
-            message: initialMessage.notification!.body ?? 'No message body',
-            postTime:
-                initialMessage.sentTime ??
-                DateTime.now(), // Use sentTime if available
-            status: 'unread',
-          );
-          // Prevent duplicates if backend fetch is also adding it
-          if (!_notifications.any((item) => item.id == basicNotification.id)) {
-            _notifications.insert(
-              0,
-              NotificationItem(customNotification: basicNotification),
-            );
-            _notifications.sort(
-              (a, b) => b.postTime.compareTo(a.postTime),
-            ); // Use postTime getter
-          }
-        });
-      }
-    }
-  }
-
-  // Function to fetch notifications from the backend
-  Future<void> _loadNotificationsFromBackend() async {
-    setState(() {
-      _isLoading = true; // Set loading state
-      _error = null; // Clear previous errors
-    });
-
-    try {
-      // Call the updated API function that returns a List<CustomNotification>
-      final List<CustomNotification> backendNotifications =
-          await getNotificationsForTraveller(_currentTravellerId, _jwtToken);
-
-      // Check if the widget is still mounted before calling setState
-      if (!mounted) return;
-
-      setState(() {
-        // Directly use the list of CustomNotification objects
-        _notifications =
-            backendNotifications
-                .map((cn) => NotificationItem(customNotification: cn))
-                .toList();
-        // Sort by post time, newest first
-        _notifications.sort(
-          (a, b) => b.postTime.compareTo(a.postTime), // Use postTime getter
+        final basicNotification = CustomNotification(
+          id:
+              initialMessage.messageId ??
+              DateTime.now().millisecondsSinceEpoch.toString(),
+          title: initialMessage.notification!.title ?? 'New Notification',
+          message: initialMessage.notification!.body ?? 'No message body',
+          postTime: initialMessage.sentTime ?? DateTime.now(),
+          status: 'unread', // Always assume unread when received
         );
-
-        // Check if the list is empty after loading
-        if (_notifications.isEmpty) {
-          print("Backend returned an empty list of notifications.");
-          // Optionally set a message if no notifications were found
-          // _error = "No notifications found.";
-        }
-      });
-    } catch (e) {
-      // Check if the widget is still mounted before calling setState
-      if (!mounted) return;
-
-      setState(() {
-        _error =
-            'Failed to load notifications: ${e.toString()}'; // Set error message
-        _notifications = []; // Clear notifications on error
-      });
-      print("Error loading notifications from backend: $e");
-    } finally {
-      // Check if the widget is still mounted before calling setState
-      if (!mounted) return;
-
-      setState(() {
-        _isLoading = false; // Turn off loading state
-      });
-    }
-  }
-
-  // Existing Firebase Messaging logic - adapt to use CustomNotification if possible
-  void _addForegroundMessage() {
-    if (widget.foregroundMessage?.notification != null) {
-      print(
-        "Processing initial foreground message passed to widget: ${widget.foregroundMessage?.notification?.title}",
-      );
-      // Logic to add to list (similar to listener)
-      if (mounted) {
-        setState(() {
-          final basicNotification = CustomNotification(
-            id:
-                widget.foregroundMessage!.messageId ??
-                DateTime.now().millisecondsSinceEpoch.toString(),
-            title:
-                widget.foregroundMessage!.notification!.title ??
-                'New Notification',
-            message:
-                widget.foregroundMessage!.notification!.body ??
-                'No message body',
-            postTime: widget.foregroundMessage!.sentTime ?? DateTime.now(),
-            status: 'unread',
-          );
-          if (!_notifications.any((item) => item.id == basicNotification.id)) {
-            _notifications.insert(
-              0,
-              NotificationItem(customNotification: basicNotification),
-            );
-            _notifications.sort(
-              (a, b) => b.postTime.compareTo(a.postTime),
-            ); // Use postTime getter
-          }
-        });
+        _addOrUpdateNotification(basicNotification);
       }
-    } else {
-      print(
-        "widget.foregroundMessage or its notification is null (in _addForegroundMessage)",
-      );
     }
   }
 
-  // Existing Firebase Messaging logic - adapt to use CustomNotification if possible
   void _listenForForegroundNotifications() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (message.notification != null) {
         print(
           "Foreground notification received while on screen: ${message.notification?.title}",
         );
-        // Create a basic CustomNotification for the foreground message
         final basicNotification = CustomNotification(
           id:
               message.messageId ??
-              DateTime.now().millisecondsSinceEpoch
-                  .toString(), // Use messageId or generate
+              DateTime.now().millisecondsSinceEpoch.toString(),
           title: message.notification!.title ?? 'New Notification',
           message: message.notification!.body ?? 'No message body',
-          postTime:
-              message.sentTime ?? DateTime.now(), // Use sentTime if available
-          status: 'unread', // Assume foreground messages are unread initially
+          postTime: message.sentTime ?? DateTime.now(),
+          status: 'unread', // Always assume unread when received
         );
-        if (mounted) {
-          // Check if the widget is still mounted before setState
-          setState(() {
-            // Prevent duplicates if backend fetch is also adding it
-            if (!_notifications.any(
-              (item) => item.id == basicNotification.id,
-            )) {
-              _notifications.insert(
-                0,
-                NotificationItem(customNotification: basicNotification),
-              );
-              // Sort again after adding a new notification
-              _notifications.sort(
-                (a, b) => b.postTime.compareTo(a.postTime),
-              ); // Use postTime getter
-            }
-          });
-        }
+        _addOrUpdateNotification(basicNotification);
       }
     });
   }
 
-  // Function to mark a notification as read locally and on the backend
-  Future<void> _markAsRead(NotificationItem notificationItem) async {
-    // Find the index of the notification in the current list
-    final index = _notifications.indexWhere(
-      (item) => item.id == notificationItem.id,
-    );
-
-    if (index != -1 && !_notifications[index].isRead) {
-      // Optimistically update UI
-      setState(() {
-        // Create a new CustomNotification with updated status
-        final updatedCustomNotification = CustomNotification(
-          id: notificationItem.customNotification.id,
-          title: notificationItem.customNotification.title,
-          message: notificationItem.customNotification.message,
-          postTime: notificationItem.customNotification.postTime,
-          status: 'read', // Set status to read
-        );
-        // Replace the old NotificationItem with the updated one
+  // Centralized method to add or update notifications and sort
+  void _addOrUpdateNotification(CustomNotification newNotification) {
+    setState(() {
+      final index = _notifications.indexWhere(
+        (item) => item.id == newNotification.id,
+      );
+      if (index != -1) {
+        // Update existing notification
         _notifications[index] = NotificationItem(
-          customNotification: updatedCustomNotification,
+          customNotification: newNotification,
         );
-        // No need to sort here, status change doesn't affect order
-      });
-
-      // Call backend API to mark as read
-      try {
-        // Ensure _currentTravellerId is not null before calling
-        if (_currentTravellerId != null) {
-          final success = await markNotificationAsReadApi(
-            _currentTravellerId!, // Use non-nullable version
-            notificationItem.id,
-            _jwtToken.toString()
-          ); // Pass traveller ID and notification ID
-
-          if (!success) {
-            // If backend update failed, you might want to revert the UI state
-            // or show an error message. For simplicity, we'll just log for now.
-            print(
-              "Failed to mark notification ${notificationItem.id} as read on backend.",
-            );
-          }
-        } else {
-          print(
-            "Traveller ID is null, cannot mark notification as read on backend.",
-          );
-        }
-      } catch (e) {
-        print("Error calling markNotificationAsReadApi: $e");
-        // Optional: Revert UI state on API call error
+      } else {
+        // Add new notification
+        _notifications.insert(
+          0,
+          NotificationItem(customNotification: newNotification),
+        );
       }
+      _notifications.sort((a, b) => b.postTime.compareTo(a.postTime));
+    });
+  }
+
+  Future<void> _loadNotificationsFromBackend() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final List<CustomNotification> backendNotifications =
+          await getNotificationsForTraveller(_currentTravellerId, _jwtToken);
+
+      if (!mounted) return;
+
+      setState(() {
+        _notifications =
+            backendNotifications
+                .map((cn) => NotificationItem(customNotification: cn))
+                .toList();
+        _notifications.sort((a, b) => b.postTime.compareTo(a.postTime));
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = AppLocalizations.of(
+          context,
+        )!.failedToLoadNotifications(e.toString());
+        _notifications = [];
+      });
+      print("Error loading notifications from backend: $e");
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-  // Function to mark a notification as unread locally and on the backend
-  Future<void> _markAsUnread(NotificationItem notificationItem) async {
-    // Find the index of the notification in the current list
-    final index = _notifications.indexWhere(
-      (item) => item.id == notificationItem.id,
+  Future<void> _markAsRead(NotificationItem notificationItem) async {
+    print(
+      'Attempting to mark as read: ID=${notificationItem.id}, Current status=${notificationItem.isRead ? 'read' : 'unread'}',
     );
 
-    if (index != -1 && notificationItem.isRead) {
-      // Only mark as unread if it's currently read
-      // Optimistically update UI
+    final index = _notifications.indexWhere(
+      (item) => item.customNotification.id == notificationItem.id,
+    );
+
+    if (index != -1 && !_notifications[index].isRead) {
       setState(() {
-        // Create a new CustomNotification with updated status
         final updatedCustomNotification = CustomNotification(
           id: notificationItem.customNotification.id,
           title: notificationItem.customNotification.title,
           message: notificationItem.customNotification.message,
           postTime: notificationItem.customNotification.postTime,
-          status: 'unread', // Set status to unread
+          status: 'read',
         );
-        // Replace the old NotificationItem with the updated one
         _notifications[index] = NotificationItem(
           customNotification: updatedCustomNotification,
         );
-        // No need to sort here, status change doesn't affect order
+        print('UI updated to read for ID: ${notificationItem.id}');
       });
 
-      // Call backend API to mark as unread
       try {
-        // Ensure _currentTravellerId is not null before calling
-        if (_currentTravellerId != null) {
-          final success = await markNotificationAsUnreadApi(
-            _currentTravellerId!, // Use non-nullable version
+        if (_currentTravellerId != null && _jwtToken != null) {
+          final success = await markNotificationAsReadApi(
+            _currentTravellerId!,
             notificationItem.id,
-            _jwtToken.toString()
-          ); // Pass traveller ID and notification ID
-
+            _jwtToken!,
+          );
           if (!success) {
-            // If backend update failed, you might want to revert the UI state
-            // or show an error message. For simplicity, we'll just log for now.
             print(
-              "Failed to mark notification ${notificationItem.id} as unread on backend.",
+              "Backend failed to mark notification ${notificationItem.id} as read. Reverting UI.",
+            );
+            setState(() {
+              final originalCustomNotification = CustomNotification(
+                id: notificationItem.customNotification.id,
+                title: notificationItem.customNotification.title,
+                message: notificationItem.customNotification.message,
+                postTime: notificationItem.customNotification.postTime,
+                status: 'unread',
+              );
+              _notifications[index] = NotificationItem(
+                customNotification: originalCustomNotification,
+              );
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.markReadFailed),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.markReadSuccess),
+              ),
             );
           }
         } else {
           print(
-            "Traveller ID is null, cannot mark notification as unread on backend.",
+            "Traveller ID or JWT Token is null, cannot mark notification as read on backend.",
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.markReadLoginRequired,
+              ),
+            ),
           );
         }
       } catch (e) {
-        print("Error calling markNotificationAsUnreadApi: $e");
-        // Optional: Revert UI state on API call error
+        print(
+          "Error calling markNotificationAsReadApi for ID ${notificationItem.id}: $e",
+        );
+        setState(() {
+          final originalCustomNotification = CustomNotification(
+            id: notificationItem.customNotification.id,
+            title: notificationItem.customNotification.title,
+            message: notificationItem.customNotification.message,
+            postTime: notificationItem.customNotification.postTime,
+            status: 'unread',
+          );
+          _notifications[index] = NotificationItem(
+            customNotification: originalCustomNotification,
+          );
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.markReadError(e.toString()),
+            ),
+          ),
+        );
       }
+    } else {
+      print(
+        'Mark as read skipped: Notification ID=${notificationItem.id}, Is already read or not found.',
+      );
+    }
+  }
+
+  Future<void> _markAsUnread(NotificationItem notificationItem) async {
+    print(
+      'Attempting to mark as unread: ID=${notificationItem.id}, Current status=${notificationItem.isRead ? 'read' : 'unread'}',
+    );
+
+    final index = _notifications.indexWhere(
+      (item) => item.customNotification.id == notificationItem.id,
+    );
+
+    if (index != -1 && _notifications[index].isRead) {
+      setState(() {
+        final updatedCustomNotification = CustomNotification(
+          id: notificationItem.customNotification.id,
+          title: notificationItem.customNotification.title,
+          message: notificationItem.customNotification.message,
+          postTime: notificationItem.customNotification.postTime,
+          status: 'unread',
+        );
+        _notifications[index] = NotificationItem(
+          customNotification: updatedCustomNotification,
+        );
+        print('UI updated to unread for ID: ${notificationItem.id}');
+      });
+
+      try {
+        if (_currentTravellerId != null && _jwtToken != null) {
+          final success = await markNotificationAsUnreadApi(
+            _currentTravellerId!,
+            notificationItem.id,
+            _jwtToken!,
+          );
+          if (!success) {
+            print(
+              "Backend failed to mark notification ${notificationItem.id} as unread. Reverting UI.",
+            );
+            setState(() {
+              final originalCustomNotification = CustomNotification(
+                id: notificationItem.customNotification.id,
+                title: notificationItem.customNotification.title,
+                message: notificationItem.customNotification.message,
+                postTime: notificationItem.customNotification.postTime,
+                status: 'read',
+              );
+              _notifications[index] = NotificationItem(
+                customNotification: originalCustomNotification,
+              );
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.markUnreadFailed),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.markUnreadSuccess),
+              ),
+            );
+          }
+        } else {
+          print(
+            "Traveller ID or JWT Token is null, cannot mark notification as unread on backend.",
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.markUnreadLoginRequired,
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        print(
+          "Error calling markNotificationAsUnreadApi for ID ${notificationItem.id}: $e",
+        );
+        setState(() {
+          final originalCustomNotification = CustomNotification(
+            id: notificationItem.customNotification.id,
+            title: notificationItem.customNotification.title,
+            message: notificationItem.customNotification.message,
+            postTime: notificationItem.customNotification.postTime,
+            status: 'read',
+          );
+          _notifications[index] = NotificationItem(
+            customNotification: originalCustomNotification,
+          );
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.markUnreadError(e.toString()),
+            ),
+          ),
+        );
+      }
+    } else {
+      print(
+        'Mark as unread skipped: Notification ID=${notificationItem.id}, Is already unread or not found.',
+      );
     }
   }
 
   void _showNotificationDetails(BuildContext context, NotificationItem item) {
+    // Automatically mark as read if it's currently unread.
+    // This call is intentionally placed here to update the UI immediately
+    // as the dialog opens, before the dialog rebuilds.
+    if (!item.isRead) {
+      _markAsRead(item);
+    }
+
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return Stack(
-          children: [
-            // GestureDetector to dismiss dialog by tapping outside
-            GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
-              child: Container(color: Colors.black54),
-            ),
-            Center(
-              child: Card(
-                margin: const EdgeInsets.all(20.0),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.title,
-                        style: const TextStyle(
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 10.0),
-                      Text(item.body, style: const TextStyle(fontSize: 16.0)),
-                      const SizedBox(height: 16.0),
-                      Row(
-                        // Use a Row for multiple buttons
-                        mainAxisAlignment:
-                            MainAxisAlignment.end, // Align buttons to the right
-                        children: [
-                          // Show "Mark as Unread" button only if the notification is currently read
-                          if (item.isRead)
-                            TextButton(
-                              onPressed: () {
-                                _markAsUnread(
-                                  item,
-                                ); // Call the mark as unread function
-                                Navigator.of(context).pop(); // Close the dialog
-                              },
-                              child: const Text('Mark as Unread'),
-                            ),
-                          const SizedBox(
-                            width: 8.0,
-                          ), // Add spacing between buttons
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Close'),
-                          ),
-                        ],
-                      ),
-                    ],
+      builder: (BuildContext dialogContext) {
+        // Use dialogContext to avoid potential context issues
+        final l10n = AppLocalizations.of(dialogContext)!;
+        final theme = Theme.of(dialogContext);
+
+        // Get the *current* state of the notification from the list, not the potentially outdated 'item'
+        // This ensures the dialog reflects the most up-to-date read status after `_markAsRead` is called.
+        final currentNotification = _notifications.firstWhere(
+          (n) => n.id == item.id,
+          orElse: () => item,
+        );
+
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                currentNotification.isRead
+                    ? Icons.mark_email_read
+                    : Icons.mark_email_unread,
+                color:
+                    currentNotification.isRead
+                        ? theme.colorScheme.onSurface.withOpacity(0.6)
+                        : theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  currentNotification.title,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color:
+                        currentNotification.isRead
+                            ? theme.colorScheme.onSurface
+                            : theme.colorScheme.primary,
                   ),
                 ),
               ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                  currentNotification.body,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 15.0),
+                Text(
+                  '${l10n.postedOn}: ${DateFormat('EEEE, MMMM d, yyyy hh:mm a', l10n.localeName).format(currentNotification.postTime.toLocal())}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            // ONLY show "Mark as Unread" if the notification is currently marked as read
+            if (currentNotification.isRead)
+              TextButton(
+                onPressed: () {
+                  _markAsUnread(currentNotification); // Call mark as unread
+                  Navigator.of(dialogContext).pop(); // Close the dialog
+                },
+                child: Text(l10n.markAsUnreadButton),
+              ),
+            TextButton(
+              onPressed:
+                  () => Navigator.of(dialogContext).pop(), // Close button
+              child: Text(l10n.closeButton),
             ),
           ],
         );
       },
     );
-    // Mark as read when the details dialog is shown (if it's unread)
-    if (!item.isRead) {
-      _markAsRead(item);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: AppBar(title: Text(l10n.notificationsTitle)),
       body:
           _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(),
-              ) // Show loading indicator
+              ? Center(
+                child: CircularProgressIndicator(
+                  color: theme.colorScheme.primary,
+                ),
+              )
               : _error != null
-              ? Center(child: Text(_error!)) // Show error message
+              ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 80,
+                        color: theme.colorScheme.error,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.errorLoadingNotifications,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _error!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: _loadNotificationsFromBackend,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(l10n.tryAgainButton),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
               : _notifications.isEmpty
-              ? const Center(
-                child: Text('No notifications yet.'),
-              ) // Show empty message
+              ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.notifications_off,
+                        size: 80,
+                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.noNotificationsYet,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.8),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.notificationEmptyMessage,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              )
               : ListView.builder(
                 itemCount: _notifications.length,
                 itemBuilder: (context, index) {
@@ -447,27 +597,51 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       horizontal: 16.0,
                       vertical: 8.0,
                     ),
-                    // Change card color based on read status
+                    elevation: 3.0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      side: BorderSide(
+                        color:
+                            notification.isRead
+                                ? Colors.transparent
+                                : theme.colorScheme.primary.withOpacity(0.5),
+                        width: 1.0,
+                      ),
+                    ),
                     color:
                         notification.isRead
-                            ? Colors.grey[300]
-                            : null, // Use default color if unread
+                            ? theme.cardColor
+                            : theme.colorScheme.surfaceContainerHighest,
                     child: ListTile(
                       leading: Stack(
                         alignment: Alignment.center,
                         children: [
-                          const Icon(Icons.notifications_outlined),
-                          // Show red dot only if not read
+                          Icon(
+                            notification.isRead
+                                ? Icons.mark_email_read_outlined
+                                : Icons.mark_email_unread_outlined,
+                            color:
+                                notification.isRead
+                                    ? theme.colorScheme.onSurface.withOpacity(
+                                      0.6,
+                                    )
+                                    : theme.colorScheme.primary,
+                            size: 28,
+                          ),
                           if (!notification.isRead)
                             Positioned(
-                              top: 2.0,
-                              right: 2.0,
+                              top: 4.0,
+                              right: 4.0,
                               child: Container(
-                                width: 8.0,
-                                height: 8.0,
-                                decoration: const BoxDecoration(
+                                width: 10.0,
+                                height: 10.0,
+                                decoration: BoxDecoration(
                                   color: Colors.red,
                                   shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 1.5,
+                                  ),
                                 ),
                               ),
                             ),
@@ -475,29 +649,50 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       ),
                       title: Text(
                         notification.title,
-                        // Optional: Style title differently if read
-                        style: TextStyle(
+                        style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight:
                               notification.isRead
                                   ? FontWeight.normal
                                   : FontWeight.bold,
                           color:
                               notification.isRead
-                                  ? Colors.grey[700]
-                                  : Colors.black,
+                                  ? theme.colorScheme.onSurface.withOpacity(0.8)
+                                  : theme.colorScheme.onSurface,
                         ),
                       ),
-                      subtitle: Text(
-                        notification.body,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        // Optional: Style subtitle differently if read
-                        style: TextStyle(
-                          color:
-                              notification.isRead
-                                  ? Colors.grey[600]
-                                  : Colors.black87,
-                        ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            notification.body,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color:
+                                  notification.isRead
+                                      ? theme.colorScheme.onSurface.withOpacity(
+                                        0.6,
+                                      )
+                                      : theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 4.0),
+                          Text(
+                            DateFormat(
+                              'MMM d, yyyy - hh:mm a',
+                              l10n.localeName,
+                            ).format(notification.postTime.toLocal()),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: Icon(
+                        Icons.chevron_right,
+                        color: theme.colorScheme.onSurface.withOpacity(0.5),
                       ),
                       onTap: () {
                         _showNotificationDetails(context, notification);

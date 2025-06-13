@@ -1,10 +1,10 @@
-// signup.dart
 import 'package:flutter/material.dart';
 import 'package:traveller_app/models/user.dart';
 import 'package:traveller_app/services/user_api_services.dart';
 import 'package:traveller_app/screens/signin.dart';
 import 'package:traveller_app/utils/validation_utils.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:dio/dio.dart'; // Add this import if you're using Dio for HTTP requests
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -16,8 +16,6 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
 
-  String? _loginPreference =
-      'Email'; // Consider making this nullable initially or use a default from options
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -57,22 +55,10 @@ class _SignUpPageState extends State<SignUpPage> {
         return;
       }
 
-      // Basic validation for login preference selection (redundant with TextFormField but okay)
-      if (_loginPreference == 'Email' && _emailController.text.trim().isEmpty) {
-        // Handled by validator
-      }
-      if (_loginPreference == 'Phone' && _phoneController.text.trim().isEmpty) {
-        // Handled by validator
-      }
-
       final user = User(
         firstName: _firstNameController.text.trim(), // Trim whitespace
         lastName: _lastNameController.text.trim(), // Trim whitespace
-        loginPreference: _loginPreference,
-        email:
-            _loginPreference == 'Email' ? _emailController.text.trim() : null,
-        phoneNumber:
-            _loginPreference == 'Phone' ? _phoneController.text.trim() : null,
+        email:_emailController.text.trim(),
         password: _passwordController.text, // Don't trim password
       );
 
@@ -92,9 +78,54 @@ class _SignUpPageState extends State<SignUpPage> {
       } catch (e) {
         // Check mounted before using context
         if (!mounted) return;
+
+        // --- DEBUGGING STEP: Print the exact error to console ---
+        print('Raw signup error: $e');
+        if (e is DioException) {
+          print('DioException response data: ${e.response?.data}');
+          print('DioException response status code: ${e.response?.statusCode}');
+        }
+        // --- END DEBUGGING STEP ---
+
+        String friendlyMessage;
+        String backendErrorMessage = '';
+
+        // Extract the error message from DioException if applicable
+        if (e is DioException && e.response?.data != null) {
+          // Assuming backend sends {"error": "some message"}
+          if (e.response!.data is Map &&
+              e.response!.data.containsKey('error')) {
+            backendErrorMessage =
+                e.response!.data['error'].toString().toLowerCase();
+          } else {
+            backendErrorMessage = e.response!.data.toString().toLowerCase();
+          }
+        } else {
+          backendErrorMessage = e.toString().toLowerCase();
+        }
+
+        if (backendErrorMessage.contains('user already exists')) {
+          friendlyMessage = l10n.userAlreadyExists;
+        } else if (backendErrorMessage.contains(
+          'registration is waiting email verification',
+        )) {
+          friendlyMessage = l10n.registrationPendingVerification;
+          _showVerificationDialog(
+            context,
+            l10n,
+          ); // Re-show dialog for this specific case
+        } else {
+          // Generic error message for other unexpected errors
+          // It's often better to show a more general "Something went wrong"
+          // unless the raw error is truly helpful to the user.
+          friendlyMessage =
+              l10n.signUpFailedGeneric; // Use a more generic localized message
+          print('Unhandled signup error: $e'); // Keep logging unhandled errors
+        }
+
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.signUpError(e.toString()))));
+        ).showSnackBar(SnackBar(content: Text(friendlyMessage)));
       }
     }
   }
@@ -103,27 +134,15 @@ class _SignUpPageState extends State<SignUpPage> {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
-        final theme = Theme.of(
-          dialogContext,
-        ); 
-
         return AlertDialog(
-          title: Text(
-            l10n.verificationEmailSent,
-          ),
-          content: Text(
-            l10n.verificationEmailContent,
-          ),
+          title: Text(l10n.verificationEmailSent),
+          content: Text(l10n.verificationEmailContent),
           actions: <Widget>[
             TextButton(
-              // TextButton style will pick up theme.textButtonTheme automatically
               child: Text(l10n.ok),
               onPressed: () {
-                // Check mounted before navigating (using context from the main State, not dialogContext)
-                // While navigating from dialog actions is common, checking 'mounted' here is safest practice
                 if (!mounted) return;
                 Navigator.of(context).pushReplacement(
-                  // Use context from the State, not dialogContext
                   MaterialPageRoute(builder: (context) => SignInPage()),
                 );
               },
@@ -136,8 +155,8 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!; 
-    final theme = Theme.of(context); 
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -148,9 +167,7 @@ class _SignUpPageState extends State<SignUpPage> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: theme.cardColor,
-              borderRadius: BorderRadius.circular(
-                20,
-              ), 
+              borderRadius: BorderRadius.circular(20),
               boxShadow:
                   theme.brightness == Brightness.light
                       ? [
@@ -174,17 +191,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // General input fields
                   _buildInputField(l10n.firstName, _firstNameController, l10n),
                   _buildInputField(l10n.lastName, _lastNameController, l10n),
-                  _buildLoginPreference(l10n, theme), // Pass theme
-                  _loginPreference == 'Email'
-                      ? _buildInputField(l10n.email, _emailController, l10n)
-                      : _buildInputField(
-                        l10n.phoneNumber,
-                        _phoneController,
-                        l10n,
-                      ),
+                  _buildInputField(l10n.email, _emailController, l10n),
                   _buildInputField(
                     l10n.password,
                     _passwordController,
@@ -213,17 +222,15 @@ class _SignUpPageState extends State<SignUpPage> {
                   ElevatedButton(
                     onPressed: () => _signUp(context),
                     style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(
-                        double.infinity,
-                        50,
-                      ), // Keep full width and height
+                      minimumSize: const Size(double.infinity, 50),
                     ),
                     child: Text(l10n.signUp),
                   ),
                   const SizedBox(height: 10),
-                  _buildGoogleSignUpButton(l10n), // Pass l10n if needed inside
-                  const SizedBox(height: 15),
-                  _buildAlreadyHaveAccount(context, l10n, theme), // Pass theme
+                  const SizedBox(
+                    height: 15,
+                  ), // Adjusted spacing after removing Google button
+                  _buildAlreadyHaveAccount(context, l10n, theme),
                 ],
               ),
             ),
@@ -238,15 +245,13 @@ class _SignUpPageState extends State<SignUpPage> {
     TextEditingController controller,
     AppLocalizations l10n, {
     bool isPassword = false,
-    bool? isVisible, // Added
-    VoidCallback? toggleVisibility, // Added
+    bool? isVisible,
+    VoidCallback? toggleVisibility,
   }) {
-    // Input decoration styling will pick up theme.inputDecorationTheme automatically
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
         controller: controller,
-        // Use isVisible state if it's a password field
         obscureText: isPassword ? !(isVisible ?? false) : false,
         keyboardType:
             isPassword
@@ -255,12 +260,10 @@ class _SignUpPageState extends State<SignUpPage> {
                     ? TextInputType.emailAddress
                     : (label == l10n.phoneNumber
                         ? TextInputType.phone
-                        : TextInputType
-                            .text)), 
+                        : TextInputType.text)),
         decoration: InputDecoration(
           labelText: label,
           errorMaxLines: 3,
-          // Add suffix icon only if it's a password field
           suffixIcon:
               isPassword && toggleVisibility != null
                   ? IconButton(
@@ -268,12 +271,10 @@ class _SignUpPageState extends State<SignUpPage> {
                       isVisible == true
                           ? Icons.visibility
                           : Icons.visibility_off,
-                      // Icon color will inherit from theme.inputDecorationTheme.suffixIconColor
                     ),
-                    onPressed:
-                        toggleVisibility, // Use the passed toggle function
+                    onPressed: toggleVisibility,
                   )
-                  : null, // No suffix icon for non-password fields
+                  : null,
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -301,77 +302,12 @@ class _SignUpPageState extends State<SignUpPage> {
           if (isPassword && !isPasswordSecure(value)) {
             return l10n.securePassword;
           }
-
-          // Need to handle password confirmation validation outside individual field validator
-          // if (label == l10n.confirmPassword && value != _passwordController.text) {
-          //   return l10n.passwordsDoNotMatch;
-          // }
-
           return null;
         },
       ),
     );
   }
 
-  // Pass Theme to the login preference builder
-  Widget _buildLoginPreference(AppLocalizations l10n, ThemeData theme) {
-    return Padding(
-      // Wrap in Padding for consistent vertical spacing
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          // Use theme's text style for the label
-          Text('${l10n.loginPreference}: ', style: theme.textTheme.bodyMedium),
-          // DropdownButton styling will pick up theme.dropdownMenuTheme automatically
-          DropdownButton<String>(
-            value: _loginPreference,
-            items:
-                ['Email', 'Phone'].map((option) {
-                  return DropdownMenuItem(
-                    value: option,
-                    child: Text(
-                      option == 'Email' ? l10n.emailOption : l10n.phoneOption,
-                      
-                    ),
-                  );
-                }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _loginPreference = value!;
-              });
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGoogleSignUpButton(AppLocalizations l10n) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white, 
-        foregroundColor: Colors.black, 
-        minimumSize: const Size(double.infinity, 50), 
-      ),
-      onPressed: () {
-        // TODO: Handle Google Sign Up
-        print('Sign Up with Google');
-      },
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Ensure Google logo asset exists and is correctly placed
-          Image.asset('assets/google_logo.png', height: 20),
-          const SizedBox(width: 10),
-          // Text color is set by ElevatedButton.styleFrom foregroundColor
-          Text(l10n.signUpWithGoogle), // Localized
-        ],
-      ),
-    );
-  }
-
-  // Pass Theme to the link builder
   Widget _buildAlreadyHaveAccount(
     BuildContext context,
     AppLocalizations l10n,
@@ -380,30 +316,22 @@ class _SignUpPageState extends State<SignUpPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Use theme's text style and Flexible to prevent overflow
         Flexible(
-          // Wrap text in Flexible
           child: Text(
             l10n.alreadyHaveAccount,
             style: theme.textTheme.bodyMedium,
             overflow: TextOverflow.ellipsis,
-          ), // Localized, add overflow
+          ),
         ),
         TextButton(
-          // TextButton style will pick up theme.textButtonTheme automatically
           onPressed: () {
-            // Check mounted before navigating
             if (!mounted) return;
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => SignInPage()),
             );
           },
-          // Add overflow to the Text within the TextButton for safety
-          child: Text(
-            l10n.signIn,
-            overflow: TextOverflow.ellipsis,
-          ), // Localized, add overflow
+          child: Text(l10n.signIn, overflow: TextOverflow.ellipsis),
         ),
       ],
     );

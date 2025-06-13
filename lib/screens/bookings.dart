@@ -1,15 +1,21 @@
 // bookings_page.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:traveller_app/l10n/app_localizations_extension.dart';
 import 'package:traveller_app/models/booking.dart';
+import 'package:traveller_app/models/travel.dart';
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/screens/booking_details.dart';
+import 'package:traveller_app/screens/bus_tracking.dart';
 import 'package:traveller_app/services/booking_api_services.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:traveller_app/services/travel_api_service.dart'; // Import AppLocalizations
 
 class BookingsPage extends StatefulWidget {
-  const BookingsPage({super.key});
+  final VoidCallback? onNavigateToHome;
+
+  const BookingsPage({super.key, this.onNavigateToHome});
 
   @override
   _BookingsPageState createState() => _BookingsPageState();
@@ -18,55 +24,78 @@ class BookingsPage extends StatefulWidget {
 class _BookingsPageState extends State<BookingsPage> {
   final BookingServices bookingServices = BookingServices();
   List<Booking> bookings = [];
+  List<Travel> travels = [];
   bool isLoading = true;
+  bool _hasFetchedOnce = false;
+  String? jwtToken = "";
 
   @override
   void initState() {
     super.initState();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    jwtToken = userProvider.jwtToken;
     _fetchBookings();
+    _fetchTravels();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasFetchedOnce || bookings.isEmpty) {
+      _fetchBookings();
+    }
   }
 
   Future<void> _fetchBookings() async {
-    if (!mounted) return; // Check mounted state before async operation
+    if (!mounted) return;
     setState(() {
       isLoading = true;
+      _hasFetchedOnce = true;
     });
 
     try {
-      // Access the UserProvider to get the user data
+      final l10n = AppLocalizations.of(context)!;
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final user = userProvider.userData;
 
-      // Use the user's ID from userData (replace with your actual property name)
-      if (user != null && user.id != null) {
-        // Assuming user.id exists
-        List<Booking> fetchedBookings = await bookingServices
-            .getBookingsForTraveler(user.id!);
-
-        // Sort the bookings by bookTime in descending order (latest first)
-        fetchedBookings.sort((a, b) => b.bookTime.compareTo(a.bookTime));
-
+      if (user == null || user.id == null) {
         if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.loginRequiredForBookingsPage)),
+          );
+          setState(() {
+            bookings = [];
+            isLoading = false;
+          });
+        }
+        return;
+      }
+
+      List<Booking>? fetchedBookings = await bookingServices
+          .getBookingsForTraveler(user.id!);
+
+      if (mounted) {
+        if (fetchedBookings.isEmpty) {
+          setState(() {
+            bookings = [];
+          });
+        } else {
+          fetchedBookings.sort((a, b) => b.bookTime.compareTo(a.bookTime));
           setState(() {
             bookings = fetchedBookings;
           });
         }
-      } else {
-        // Handle the case where the user or user ID is null
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('User ID not available. Please log in.'),
-            ),
-          ); // Improved message
-        }
       }
     } catch (e) {
-      print('Error fetching bookings: $e'); // Log the error
+      print('Error fetching bookings: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load bookings: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.failedToLoadBookings(e.toString()),
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -74,64 +103,210 @@ class _BookingsPageState extends State<BookingsPage> {
           isLoading = false;
         });
       }
+      _fetchTravels();
     }
+  }
+
+  Future<void> _fetchTravels() async{
+    for (int i = 0; i < bookings.length; i++){
+      print(i);
+      final booking = bookings[i];
+      travels.add(await getTravelByIdApi(booking.travelId!));
+    }
+
+    setState(() {
+      travels = travels;
+      print("Fetched Travels: ${travels.length}");
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!; // Get AppLocalizations instance
-    final theme = Theme.of(context); // Access the current theme
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.myBookingsTitle)), // Localize title
+      appBar: AppBar(
+        title: Text(l10n.myBookingsTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: isLoading ? null : _fetchBookings,
+            tooltip: l10n.refreshBookings,
+          ),
+        ],
+      ),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : bookings.isEmpty
               ? Center(
-                child: Text(l10n.noBookingsFound),
-              ) // Localize empty message
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.event_note,
+                      size: 80,
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.noBookingsFound,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.8),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.startBookingMessage,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        widget.onNavigateToHome?.call();
+                      },
+                      icon: const Icon(Icons.add_road),
+                      label: Text(l10n.findNewTravels),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
               : ListView.builder(
                 itemCount: bookings.length,
                 itemBuilder: (context, index) {
                   final booking = bookings[index];
-                  // Determine status text and color
-                  String statusText =
-                      booking.status ??
-                      l10n.unknownStatus; // Default to unknown if status is null
-                  Color statusColor = Colors.black; // Default color
+                  final trip = travels[index];
+                  String statusText = booking.status ?? l10n.unknownStatus;
+                  Color statusColor = Colors.black;
 
                   if (booking.status == 'pending') {
-                    // Use backend status string
-                    statusColor = Colors.red;
+                    statusColor = Colors.orange;
                   } else if (booking.status == 'confirmed') {
-                    // Use backend status string
                     statusColor = Colors.green;
+                  } else if (booking.status == 'cancelled') {
+                    statusColor = Colors.red;
+                  } else if (booking.status == 'failed') {
+                    statusColor = Colors.red;
                   }
-                  // Add other statuses if needed (e.g., 'cancelled', 'failed')
+
+                  Widget buildTripStatusShower(String status){
+                    return Column(
+                              children: [
+                                const SizedBox(height: 8),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: ElevatedButton.icon(
+                                    onPressed: (){
+                                      print("button pressed");
+                                      // Navigate to the bus tracking page
+                                      Navigator.push(
+                                        context,
+                                        status == "ongoing" ? MaterialPageRoute(
+                                          builder: (_) => BusTrackingPage(travelId: booking.travelId!, jwtToken: jwtToken!),
+                                        ) : MaterialPageRoute(
+                                          builder: (_) => BookingDetailsPage(booking: booking),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.location_searching),
+                                    label: status == "ongoing" ? Text(l10n.followBus) : Text(l10n.feedback),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            );
+                  }
 
                   return Card(
                     margin: const EdgeInsets.all(8.0),
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: ListTile(
-                      // Displaying start location and potentially destination
+                      leading: Icon(
+                        Icons.airplane_ticket,
+                        color: theme.colorScheme.primary,
+                      ),
                       title: Text(
-                        '${l10n.from}: ${booking.startLocation}',
-                      ), // Localize
+                        // Updated title to include destination
+                        '${l10n.from}: ${booking.startLocation} ${l10n.to}: ${booking.destination}',
+                        style: theme.textTheme.titleMedium,
+                      ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '${l10n.bookedOn}: ${DateFormat('yyyy-MM-dd HH:mm').format(booking.bookTime.toLocal())}',
-                          ), // Localize and format book time in local time
-                          Text(
-                            '${l10n.status}: $statusText',
-                            style: TextStyle(
-                              color: statusColor,
-                              fontWeight: FontWeight.bold,
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              l10n.travelIdDisplay(booking.travelId!),
+                              style: theme.textTheme.bodySmall,
                             ),
-                          ), // Display status with color
+                          ),
+                          // Padding(
+                          //   padding: const EdgeInsets.only(top: 4.0),
+                          //   child: Text(
+                          //     '${l10n.bookedOn}: ${DateFormat('EEEE, MMMM d, yyyy hh:mm a', l10n.localeName).format(trip.plannedStartTime.toLocal())}',
+                          //     style: theme.textTheme.bodySmall,
+                          //   ),
+                          // ),
+
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              '${l10n.bookedOn}: ${DateFormat('EEEE, MMMM d, yyyy hh:mm a', l10n.localeName).format(booking.bookTime.toLocal())}',
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              '${l10n.status}: ${l10n.getBookingStatusLocalized(statusText)}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: statusColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          if (booking.bookingRef != null &&
+                              booking.bookingRef!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Text(
+                                '${l10n.bookingReference}: ${booking.bookingRef}',
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ),
+
+                            // Follow Bus Button
+                            
+                            trip.status == 'ongoing' ?
+                            buildTripStatusShower("ongoing") : (trip.status == "completed") ? buildTripStatusShower("completed") : const SizedBox.shrink(),
                         ],
                       ),
+                      trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         Navigator.push(
                           context,

@@ -21,8 +21,8 @@ class CustomNavBar extends StatelessWidget {
         BottomNavigationBarItem(icon: const Icon(Icons.home), label: l10n.home),
         BottomNavigationBarItem(icon: Icon(Icons.book), label: l10n.bookings),
         BottomNavigationBarItem(
-          icon: Icon(Icons.check_circle),
-          label: l10n.checkIn,
+          icon: Icon(Icons.place),
+          label: l10n.destinationsTitle,
         ),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: l10n.profile),
         BottomNavigationBarItem(icon: Icon(Icons.event), label: l10n.events)

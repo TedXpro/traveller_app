@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:traveller_app/models/change_credentials.dart';
 import 'package:traveller_app/models/user.dart';
-import 'package:traveller_app/models/user_profile.dart'; // Still used for data structure, but not directly sent as JSON body
+// Still used for data structure, but not directly sent as JSON body
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/services/user_api_services.dart'; // Assuming UserService is here
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';

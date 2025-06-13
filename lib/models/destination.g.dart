@@ -11,12 +11,13 @@ Destination _$DestinationFromJson(Map<String, dynamic> json) => Destination(
   name: json['name'] as String,
   stations:
       (json['stations'] as List<dynamic>?)?.map((e) => e as String).toList(),
-);
+)..image = json['image'] as String?;
 
 Map<String, dynamic> _$DestinationToJson(Destination instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
+      'image': instance.image,
       'stations': instance.stations,
     };
 
@@ -26,7 +27,6 @@ DestinationDetails _$DestinationDetailsFromJson(Map<String, dynamic> json) =>
       latitude: json['latitude'] as String?,
       longitude: json['longitude'] as String?,
       description: json['description'] as String?,
-      image: json['image'] as String?,
       hotels:
           (json['hotels'] as List<dynamic>?)
               ?.map((e) => Hotel.fromJson(e as Map<String, dynamic>))
@@ -51,7 +51,6 @@ Map<String, dynamic> _$DestinationDetailsToJson(DestinationDetails instance) =>
       'latitude': instance.latitude,
       'longitude': instance.longitude,
       'description': instance.description,
-      'image': instance.image,
       'hotels': instance.hotels,
       'culture': instance.culture,
       'history': instance.history,

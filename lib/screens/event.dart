@@ -16,7 +16,7 @@ class EventPage extends StatefulWidget {
 
 class _EventPageState extends State<EventPage> {
   String title = '';
-  String? selectedPlace;
+  Destination? selectedPlace;
   DateTime? fromDate;
   DateTime? toDate;
 
@@ -65,7 +65,7 @@ class _EventPageState extends State<EventPage> {
     var formattedToDate = toDate != null ? DateFormat('yyyy-MM-dd').format(toDate!) : '';
     final params = {
       'title': title,
-      'destination_id': selectedPlace ?? '',
+      'destination_id': selectedPlace?.id ?? '',
       'date_min': formattedFromDate,
       'date_max': formattedToDate,
     };
@@ -99,7 +99,7 @@ class _EventPageState extends State<EventPage> {
               value: selectedPlace,
               hint: Text('Select place'),
               items: destinations.map((place) {
-                return DropdownMenuItem<dynamic>(value: place.id, child: Text(place.name));
+                return DropdownMenuItem<dynamic>(value: place, child: Text(place.name));
               }).toList(),
               onChanged: (val) => setState(() => selectedPlace = val),
             ),
@@ -186,4 +186,3 @@ class _EventPageState extends State<EventPage> {
     );
   }
 }
-

@@ -10,11 +10,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:traveller_app/models/email_credential.dart';
 import 'package:traveller_app/models/login_response.dart';
 import 'package:traveller_app/providers/user_provider.dart'; // Import UserProvider
+import 'package:traveller_app/screens/forgot_password_email_dialog.dart';
 import 'package:traveller_app/screens/main_screen.dart';
 import 'package:traveller_app/screens/signup.dart';
 import 'package:traveller_app/services/user_api_services.dart'; // Assuming UserService is here
 import 'package:traveller_app/utils/validation_utils.dart'; // Assuming validation_utils is here
 import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:traveller_app/screens/reset_password_page.dart'; // Import the ResetPasswordPage
+
 // Assuming JwtDecoder is imported or available globally if needed for decoding token payload
 // import 'package:jwt_decoder/jwt_decoder.dart'; // Example import if needed
 
@@ -56,7 +59,8 @@ class _SignInPageState extends State<SignInPage> {
         EmailCredential credentials = EmailCredential(
           email: _emailController.text.trim(),
           password:
-              _passwordController.text.trim(), // Do not trim password if exact match is needed
+              _passwordController.text
+                  .trim(), // Do not trim password if exact match is needed
         );
 
         LoginResponse? loginResponse = await UserService().login(credentials);
@@ -83,7 +87,10 @@ class _SignInPageState extends State<SignInPage> {
           await Provider.of<UserProvider>(
             context,
             listen: false,
-          ).setUserDataAndToken(loginResponse.user, loginResponse.token); // Pass both user and token
+          ).setUserDataAndToken(
+            loginResponse.user,
+            loginResponse.token,
+          ); // Pass both user and token
           // -------------------------------------------------
 
           // Check mounted before using context with Provider
@@ -93,10 +100,9 @@ class _SignInPageState extends State<SignInPage> {
           // as we discussed previously, to avoid setState during build.
           // Removing the direct call here. Ensure MainScreen handles this.
           // await Provider.of<DestinationProvider>(
-          //   context,
-          //   listen: false,
+          //   context,
+          //   listen: false,
           // ).fetchDestinations();
-
 
           // Check mounted after await before using context
           if (!mounted) return;
@@ -169,6 +175,89 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
+  // Method to handle the "Forgot Password?" tap and API call
+  void _handleForgotPassword(AppLocalizations l10n) async {
+    // Show the email input dialog and wait for the result
+    final String? email = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return const ForgotPasswordEmailDialog();
+      },
+    );
+
+    // If an email was entered and returned from the dialog
+    if (email != null && email.isNotEmpty) {
+      print('Forgot password initiated for email: $email');
+
+      // Show a loading indicator while requesting the code
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.requestingResetCode),
+          duration: const Duration(seconds: 10), // Keep visible for a bit
+        backgroundColor: Colors.blueAccent,
+          ), // Localize
+      );
+
+      try {
+        final userService =
+            UserService(); 
+        bool success = await userService.requestPasswordResetCode(email: email); // Adjust isAgency
+
+        // Check mounted after await before using context
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).hideCurrentSnackBar(); // Hide the loading SnackBar
+
+        if (success) {
+          // Code request successful, navigate to the next page
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.forgotPasswordEmailSent(email)),
+            ), // Localize success message
+          );
+          // Navigate to the ResetPasswordPage, passing the email
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) => ResetPasswordPage(email: email), // Pass email
+            ),
+          );
+        } else {
+          // Code request failed (e.g., email not found)
+          // The backend should ideally return a specific error message in the response body.
+          // For now, show a generic failure message.
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.forgotPasswordRequestFailed),
+            ), // Localize failure message
+          );
+        }
+      } catch (e) {
+        // Check mounted after await before using context
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).hideCurrentSnackBar(); // Hide the loading SnackBar
+        // Handle network or other errors during the API call
+        String errorMessage = l10n.unexpectedError;
+        if (e is Exception) {
+          // Catching generic Exception for broader error handling
+          errorMessage =
+              "${l10n.forgotPasswordRequestError}: ${e.toString()}"; // Localize with error details
+        }
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        print("Error requesting password reset code: $e");
+      }
+    } else {
+      print('Forgot password dialog cancelled or no email entered.');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -209,12 +298,12 @@ class _SignInPageState extends State<SignInPage> {
               boxShadow:
                   theme.brightness == Brightness.light
                       ? [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ]
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ]
                       : null,
             ),
             child: Form(
@@ -307,7 +396,8 @@ class _SignInPageState extends State<SignInPage> {
                       Flexible(
                         child: TextButton(
                           onPressed: () {
-                            // TODO: Implement forgot password functionality
+                            // Call the new handler function
+                            _handleForgotPassword(l10n);
                           },
                           child: Text(
                             l10n.forgotPassword,
@@ -319,27 +409,15 @@ class _SignInPageState extends State<SignInPage> {
                   ),
                   const SizedBox(height: 20),
                   _isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(),
-                        ) // Progress indicator will use theme colors
+                      ? const Center(child: CircularProgressIndicator())
                       : ElevatedButton(
-                          onPressed: handleLogin,
-                          // Set minimumSize to stretch the button horizontally
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
-                            // Theme's background, foreground, shape, padding will apply
-                            // if not explicitly set here.
-                            // e.g. backgroundColor: theme.elevatedButtonTheme.style?.backgroundColor?.resolve({MaterialState.pressed}),
-                            // It's often simplest to let the theme handle these entirely
-                            // unless a specific override (like size or branded color) is needed.
-                          ),
-                          child: Text(l10n.signIn), // Localized
+                        onPressed: handleLogin,
+                        // Set minimumSize to stretch the button horizontally
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 50),
                         ),
-                  const SizedBox(height: 20),
-                  // Use theme's text style for the 'or' separator
-                  Center(child: Text('or', style: theme.textTheme.bodyMedium)),
-                  const SizedBox(height: 10),
-                  _buildGoogleSignUpButton(l10n), // Pass l10n
+                        child: Text(l10n.signIn), // Localized
+                      ),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -380,24 +458,26 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
+  // Your existing email validation function (make sure it's accessible or copied here)
   String? validateEmail(String? value, AppLocalizations l10n) {
     if (value == null || value.isEmpty) {
       return l10n.pleaseEnterEmail; // Localized
     }
-    // isValidEmail should likely be theme-independent validation logic
+    // Assuming isValidEmail is a function in your validation_utils.dart
     if (!isValidEmail(value)) {
       return l10n.validEmail; // Localized
     }
     return null;
   }
 
+  // Your existing password validation function (make sure it's accessible or copied here)
   String? validatePassword(String? value, AppLocalizations l10n) {
     if (value == null || value.isEmpty) {
       return l10n.pleaseEnterPassword; // Localized
     }
-    // Add more complex password validation if needed (like isPasswordSecure check)
-    // isPasswordSecure should likely be theme-independent validation logic
     // For sign-in, you might not need the full security check here, just that it's not empty.
+    // If you want to add security check here, uncomment the line below and ensure isPasswordSecure is available.
+    // if (!isPasswordSecure(value)) { return l10n.invalidPassword; } // Localize
     return null;
   }
 
@@ -413,6 +493,7 @@ class _SignInPageState extends State<SignInPage> {
         minimumSize: const Size(double.infinity, 50), // Keep specific size
         // Remove other style properties like padding, shape, elevation
         // as they are handled by the theme or the minimumSize implicitly
+        // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), // Example override
       ),
       onPressed: () {
         // TODO: Handle Google Sign Up

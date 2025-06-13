@@ -16,20 +16,45 @@ class BookingServices {
       );
 
       print("inside BookTravel\n\n");
-      print(response.statusCode);
+      print("Response Status Code: ${response.statusCode}");
+      print(
+        "Response Body: ${response.body}",
+      ); // Always print the body for debugging
+
+      // --- CRUCIAL CHANGE STARTS HERE ---
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-        print(responseData);
         return Booking.fromJson(responseData);
       } else {
-        print(
-          'Failed to book travel: ${response.statusCode} - ${response.body}',
-        );
-        return null; // Return null on failure
+        // Handle non-200 status codes. The backend sent an error response.
+        String errorMessage =
+            'An unknown error occurred during booking.'; // Default message
+
+        try {
+          final Map<String, dynamic> errorData = json.decode(response.body);
+          if (errorData.containsKey('error') && errorData['error'] is String) {
+            errorMessage =
+                errorData['error']; // Extract the 'error' field from JSON
+          } else {
+            // If the error structure is different, or 'error' is not a String
+            errorMessage = response.body; // Use the raw body as a fallback
+          }
+        } catch (jsonError) {
+          // If response.body is not valid JSON, use it as is
+          errorMessage = response.body;
+          print("Failed to decode error JSON in bookTravel: $jsonError");
+        }
+
+        // Throw an exception with the extracted error message
+        // This will be caught by the _bookTravel method in TravelDetailsPage
+        throw Exception('${response.statusCode} - $errorMessage');
       }
+      // --- CRUCIAL CHANGE ENDS HERE ---
     } catch (e) {
-      print('Error booking travel: $e');
-      return null; // Return null on error
+      // This catch block now primarily handles network errors (e.g., no internet, DNS failure)
+      print('Network or unexpected error booking travel: $e');
+      // Re-throw to propagate to the calling widget's try-catch (TravelDetailsPage)
+      rethrow;
     }
   }
 
@@ -109,15 +134,20 @@ class BookingServices {
       id: booking.id, // Include the ID
       travelId: booking.travelId,
       travelerId: booking.travelerId,
+      firstName: booking.firstName,
+      lastName: booking.lastName,
+      email: booking.email,
+      phoneNumber: booking.phoneNumber,
       seatNo: booking.seatNo,
       tripType: booking.tripType,
       startLocation: booking.startLocation,
+      destination: booking.destination,
       price: booking.price,
       paymentType: booking.paymentType, // Keep existing payment type
       paymentRef: booking.paymentRef, // Keep existing payment ref
       bookTime: booking.bookTime,
       payTime: DateTime.now(), // Set payTime to now
-      bookTimeLimit: booking.bookTimeLimit,
+      bookTimeLimit: booking.bookTimeLimit, 
       status: 'confirmed', // Set status to 'confirmed'
     );
 

@@ -11,6 +11,9 @@ class Destination {
   @JsonKey(name: 'name')
   String name; 
 
+  @JsonKey(name: 'image') 
+  String? image; 
+
   @JsonKey(name: 'stations')
   List<String>? stations; 
 
@@ -35,9 +38,6 @@ class DestinationDetails {
   @JsonKey(name: 'description')
   String? description; 
 
-  @JsonKey(name: 'image') 
-  String? image; 
-
   @JsonKey(name: 'hotels')
   List<Hotel>? hotels; 
 
@@ -58,7 +58,6 @@ class DestinationDetails {
     this.latitude,
     this.longitude,
     this.description,
-    this.image,
     this.hotels,
     this.culture,
     this.history,
