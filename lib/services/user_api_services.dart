@@ -101,7 +101,7 @@ Future<User?> signup(User user) async {
       );
 
       // --- CRUCIAL CHANGE STARTS HERE ---
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         final Map<String, dynamic> userData = jsonDecode(response.body);
         return User.fromJson(userData);
       } else {

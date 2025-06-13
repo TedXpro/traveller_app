@@ -103,38 +103,47 @@ class _DestinationsListPageState extends State<DestinationsListPage> {
                                 destinationName:
                                     destination
                                         .name, // Pass the destination name
+                                image: destination.image, // Pass the image URL if available
                               ),
                         ),
                       );
                     },
                     child: Card(
-                      // Use a Card for a visually distinct item
-                      elevation: 4.0, // Add shadow
+                      elevation: 4.0,
                       shape: RoundedRectangleBorder(
-                        // Rounded corners
                         borderRadius: BorderRadius.circular(12.0),
                       ),
-                      clipBehavior:
-                          Clip.antiAlias, // Clip content to rounded corners
-                      child: Center(
-                        // Center the text within the card
-                        child: Padding(
-                          padding: const EdgeInsets.all(
-                            8.0,
-                          ), // Padding for text
-                          child: Text(
-                            destination.name, // Display destination name
-                            textAlign: TextAlign.center, // Center the text
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch, // Make image full width
+                        children: [
+                          // Image at the top
+                          Expanded(
+                            child: Image.network(
+                              destination.image ?? 'https://via.placeholder.com/150',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                color: Colors.grey[300],
+                                child: Icon(Icons.image_not_supported, size: 50),
+                              ),
                             ),
-                            maxLines: 2, // Allow name to wrap if needed
-                            overflow:
-                                TextOverflow
-                                    .ellipsis, // Add ellipsis if name is too long
                           ),
-                        ),
+
+                          // Text at the bottom
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              destination.name,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );

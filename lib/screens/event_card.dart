@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:traveller_app/models/destination.dart';
+import 'package:traveller_app/models/travel.dart';
+import 'package:traveller_app/screens/book.dart';
 import 'package:traveller_app/services/destination_api_services.dart';
+import 'package:traveller_app/services/travel_api_service.dart';
 
 class EventCard extends StatefulWidget {
   final String title;
@@ -125,18 +128,60 @@ class _EventCardState extends State<EventCard> {
 
             SizedBox(height: 10),
 
-            // Read more button
-            Align(
-              alignment: Alignment.bottomRight,
-              child: TextButton(
-                onPressed: () {
-                  setState(() {
-                    isExpanded = !isExpanded;
-                  });
-                },
-                child: isExpanded ? Text('Read less') : Text('Read more'),
-              ),
+            // Book Now and Read More buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Book Now button
+                ElevatedButton(
+                  onPressed: () async{
+                    String to = destination!.name;
+                    String from = "";
+                    // DateTime? dateMin = "";
+                    DateTime? dateMax = DateTime.parse(widget.date);
+                    List<Travel> travels = await searchTravelsApi(from, to, null, dateMax);
+                    print(travels);
+                    if (travels.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('No travels found for this event')),
+                      );
+                      return;
+                    }
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BookPage(travels: travels),
+                      ),
+                    );
+                    // Handle booking logic
+                    // ScaffoldMessenger.of(context).showSnackBar(
+                    //   SnackBar(content: Text('Booking feature coming soon!')),
+                    // );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green, // Background color
+                    foregroundColor: Colors.white, // Text color
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text('Book Now'),
+                ),
+
+                // Read More / Read Less button
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      isExpanded = !isExpanded;
+                    });
+                  },
+                  child: Text(isExpanded ? 'Read less' : 'Read more'),
+                ),
+              ],
             ),
+
           ],
         ),
       ),

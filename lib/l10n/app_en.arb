@@ -57,6 +57,7 @@
     "description": "Label for the action to check in for a trip."
   },
   "profile": "Profile",
+  "events": "Events",
   "@profile": {
     "description": "Label for the screen showing the user's profile information."
   },
@@ -1101,5 +1102,7 @@
     "description": "Tab or section title for events.",
     "type": "text",
     "placeholders": {}
-  }
+  },
+  "followBus" : "Follow Bus",
+  "feedback" : "Feedback"
 }

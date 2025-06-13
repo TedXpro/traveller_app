@@ -2,20 +2,20 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'events.g.dart';
 
-class Event {
-  @JsonKey(name: "title")
+class Event{
+  @JsonKey(name : "title")
   final String title;
 
-  @JsonKey(name: "desc")
+  @JsonKey(name : "desc")
   final String? desc;
 
-  @JsonKey(name: "date")
+  @JsonKey(name : "date")
   final DateTime? date;
 
-  @JsonKey(name: "destination_id")
+  @JsonKey(name : "destination_id")
   final String destination_id;
 
-  @JsonKey(name: "media_link")
+  @JsonKey(name : "media_link")
   final String? media;
 
   Event({
@@ -23,7 +23,7 @@ class Event {
     required this.desc,
     required this.date,
     required this.destination_id,
-    required this.media,
+    required this.media
   });
 
   factory Event.fromJson(Map<String, dynamic> json) => $_EventFromJson(json);

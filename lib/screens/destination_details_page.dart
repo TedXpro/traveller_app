@@ -11,11 +11,13 @@ class DestinationDetailsPage extends StatefulWidget {
   final String destinationId;
   // Optionally accept the destination name to display in the app bar quickly
   final String? destinationName;
+  final String? image;
 
   const DestinationDetailsPage({
     super.key,
     required this.destinationId,
-    this.destinationName, // Optional: Pass name from list screen
+    required this.destinationName, // Optional: Pass name from list screen
+    required this.image,
   });
 
   @override
@@ -114,10 +116,10 @@ class _DestinationDetailsPageState extends State<DestinationDetailsPage> {
                       ),
                     ),
                     background:
-                        destinationDetails.image != null &&
-                                destinationDetails.image!.isNotEmpty
+                        widget.image != null &&
+                                widget.image!.isNotEmpty
                             ? Image.network(
-                              destinationDetails.image!,
+                              widget.image!,
                               fit:
                                   BoxFit
                                       .cover, // Cover the entire background area

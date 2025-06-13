@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:traveller_app/l10n/app_localizations_extension.dart';
 import 'package:traveller_app/models/booking.dart';
+import 'package:traveller_app/models/travel.dart';
 import 'package:traveller_app/providers/user_provider.dart';
 import 'package:traveller_app/screens/booking_details.dart';
+import 'package:traveller_app/screens/bus_tracking.dart';
 import 'package:traveller_app/services/booking_api_services.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:traveller_app/services/travel_api_service.dart'; // Import AppLocalizations
 
 class BookingsPage extends StatefulWidget {
   final VoidCallback? onNavigateToHome;
@@ -21,13 +24,18 @@ class BookingsPage extends StatefulWidget {
 class _BookingsPageState extends State<BookingsPage> {
   final BookingServices bookingServices = BookingServices();
   List<Booking> bookings = [];
+  List<Travel> travels = [];
   bool isLoading = true;
   bool _hasFetchedOnce = false;
+  String? jwtToken = "";
 
   @override
   void initState() {
     super.initState();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    jwtToken = userProvider.jwtToken;
     _fetchBookings();
+    _fetchTravels();
   }
 
   @override
@@ -95,7 +103,21 @@ class _BookingsPageState extends State<BookingsPage> {
           isLoading = false;
         });
       }
+      _fetchTravels();
     }
+  }
+
+  Future<void> _fetchTravels() async{
+    for (int i = 0; i < bookings.length; i++){
+      print(i);
+      final booking = bookings[i];
+      travels.add(await getTravelByIdApi(booking.travelId!));
+    }
+
+    setState(() {
+      travels = travels;
+      print("Fetched Travels: ${travels.length}");
+    });
   }
 
   @override
@@ -167,6 +189,7 @@ class _BookingsPageState extends State<BookingsPage> {
                 itemCount: bookings.length,
                 itemBuilder: (context, index) {
                   final booking = bookings[index];
+                  final trip = travels[index];
                   String statusText = booking.status ?? l10n.unknownStatus;
                   Color statusColor = Colors.black;
 
@@ -178,6 +201,42 @@ class _BookingsPageState extends State<BookingsPage> {
                     statusColor = Colors.red;
                   } else if (booking.status == 'failed') {
                     statusColor = Colors.red;
+                  }
+
+                  Widget buildTripStatusShower(String status){
+                    return Column(
+                              children: [
+                                const SizedBox(height: 8),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: ElevatedButton.icon(
+                                    onPressed: (){
+                                      print("button pressed");
+                                      // Navigate to the bus tracking page
+                                      Navigator.push(
+                                        context,
+                                        status == "ongoing" ? MaterialPageRoute(
+                                          builder: (_) => BusTrackingPage(travelId: booking.travelId!, jwtToken: jwtToken!),
+                                        ) : MaterialPageRoute(
+                                          builder: (_) => BookingDetailsPage(booking: booking),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.location_searching),
+                                    label: status == "ongoing" ? Text(l10n.followBus) : Text(l10n.feedback),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            );
                   }
 
                   return Card(
@@ -206,6 +265,14 @@ class _BookingsPageState extends State<BookingsPage> {
                               style: theme.textTheme.bodySmall,
                             ),
                           ),
+                          // Padding(
+                          //   padding: const EdgeInsets.only(top: 4.0),
+                          //   child: Text(
+                          //     '${l10n.bookedOn}: ${DateFormat('EEEE, MMMM d, yyyy hh:mm a', l10n.localeName).format(trip.plannedStartTime.toLocal())}',
+                          //     style: theme.textTheme.bodySmall,
+                          //   ),
+                          // ),
+
                           Padding(
                             padding: const EdgeInsets.only(top: 4.0),
                             child: Text(
@@ -232,6 +299,11 @@ class _BookingsPageState extends State<BookingsPage> {
                                 style: theme.textTheme.bodySmall,
                               ),
                             ),
+
+                            // Follow Bus Button
+                            
+                            trip.status == 'ongoing' ?
+                            buildTripStatusShower("ongoing") : (trip.status == "completed") ? buildTripStatusShower("completed") : const SizedBox.shrink(),
                         ],
                       ),
                       trailing: const Icon(Icons.chevron_right),

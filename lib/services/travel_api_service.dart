@@ -10,14 +10,19 @@ Future<List<Travel>> searchTravelsApi(
   DateTime? dateMax,
 ) async {
   // Check for empty locations
-  if (startLocation.isEmpty || destination.isEmpty) {
-    return []; // Return empty list if locations are empty
+  // if (startLocation.isEmpty || destination.isEmpty) {
+  //   return []; // Return empty list if locations are empty
+  // }
+
+  Map<String, String> queryParams = {};
+
+  if (startLocation.isNotEmpty){
+    queryParams['start_location'] = startLocation;
   }
 
-  Map<String, String> queryParams = {
-    'start_location': startLocation,
-    'destination': destination,
-  };
+  if (destination.isNotEmpty) {
+    queryParams['destination'] = destination;
+  }
 
   if (dateMin != null) {
     queryParams['date_min'] = dateMin.toIso8601String().substring(0, 10);
@@ -26,6 +31,8 @@ Future<List<Travel>> searchTravelsApi(
   if (dateMax != null) {
     queryParams['date_max'] = dateMax.toIso8601String().substring(0, 10);
   }
+
+  print("Query Params: $queryParams");
 
   final response = await http.get(
     Uri.http(searchUrl, '/travels/search', queryParams),
@@ -53,5 +60,24 @@ Future<List<Travel>> searchTravelsApi(
     // Handle non-200 status code
     print("API error: ${response.statusCode}");
     return []; // Return empty list in case of error
+  }
+}
+
+Future<Travel> getTravelByIdApi(String travelID) async{
+  final url = Uri.parse("$baseUrl/travel/$travelID");
+  final response = await http.get(url);
+  if (response.statusCode == 200){
+    try {
+      final Map<String, dynamic> travelData = jsonDecode(response.body);
+      return Travel.fromJson(travelData);
+    } catch (e) {
+      // Handle decoding error
+      print("Error decoding travel data: $e");
+      throw Exception("Failed to decode travel data");
+    }
+  } else {
+    // Handle non-200 status code
+    print("API error: ${response.statusCode}");
+    throw Exception("Failed to load travel data");
   }
 }
