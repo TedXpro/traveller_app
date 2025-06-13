@@ -196,7 +196,7 @@ class _SignInPageState extends State<SignInPage> {
         SnackBar(
           content: Text(l10n.requestingResetCode),
           duration: const Duration(seconds: 10), // Keep visible for a bit
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Theme.of(context).colorScheme.primary,
           ), // Localize
       );
 
@@ -300,7 +300,7 @@ class _SignInPageState extends State<SignInPage> {
                   theme.brightness == Brightness.light
                       ? [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Theme.of(context).shadowColor.withOpacity(0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
