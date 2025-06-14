@@ -139,9 +139,9 @@ class _SignInPageState extends State<SignInPage> {
 
           // Check mounted before navigating
           if (!mounted) return;
-          Navigator.pushReplacement(
-            context,
+          Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => MainScreen()),
+            (route) => false,
           );
         } else {
           // Check mounted before showing SnackBar
@@ -396,7 +396,7 @@ class _SignInPageState extends State<SignInPage> {
                           : SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: handleLogin,
+                                onPressed: _isLoading ? null : handleLogin,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: theme.colorScheme.primary,
                                   foregroundColor: theme.colorScheme.onPrimary,
