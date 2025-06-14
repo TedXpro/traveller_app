@@ -122,33 +122,35 @@ class _BookPageState extends State<BookPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final List<Travel> currentFilteredTravels =
-        filteredTravels; // Use the getter
+    final List<Travel> currentFilteredTravels = filteredTravels;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.availableTrips),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(Icons.filter_list, semanticLabel: 'Filter'),
+            tooltip: l10n.filterTrips,
             onPressed: () => _showFilterDialog(context),
           ),
         ],
       ),
-      body:
-          currentFilteredTravels.isEmpty
-              ? Center(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        child: currentFilteredTravels.isEmpty
+            ? Center(
                 child: Text(
-                  l10n.noTravelsFound, // Localize this
+                  l10n.noTravelsFound,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
               )
-              : ListView.builder(
+            : ListView.separated(
                 itemCount: currentFilteredTravels.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final travel = currentFilteredTravels[index];
                   return Card(
-                    margin: const EdgeInsets.all(8.0),
+                    margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
                     elevation: 4,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -158,35 +160,37 @@ class _BookPageState extends State<BookPage> {
                         Icons.directions_bus,
                         size: 36,
                         color: Colors.blue,
+                        semanticLabel: 'Bus',
                       ),
                       title: Text(
-                        '${travel.startLocation} to ${travel.destination}',
+                        '${travel.startLocation} → ${travel.destination}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.agency(
-                              agencyNames[travel.agencyId] ?? l10n.loading,
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.agency(
+                                agencyNames[travel.agencyId] ?? l10n.loading,
+                              ),
                             ),
-                          ),
-                          Text(l10n.price(travel.price)),
-                          // Display planned start time for more info
-                          Text(
-                            l10n.departureTime(
-                              _formatDateTime(travel.plannedStartTime, l10n),
+                            Text(l10n.price(travel.price)),
+                            Text(
+                              l10n.departureTime(
+                                _formatDateTime(travel.plannedStartTime, l10n),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                      trailing: const Icon(Icons.chevron_right),
+                      trailing: const Icon(Icons.chevron_right, semanticLabel: 'Details'),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder:
-                                (context) => TravelDetailsPage(travel: travel),
+                            builder: (context) => TravelDetailsPage(travel: travel),
                           ),
                         );
                       },
@@ -194,6 +198,7 @@ class _BookPageState extends State<BookPage> {
                   );
                 },
               ),
+      ),
     );
   }
 
