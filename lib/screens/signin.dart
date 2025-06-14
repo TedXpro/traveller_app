@@ -46,10 +46,19 @@ class _SignInPageState extends State<SignInPage> {
 
   void handleLogin() async {
     // Use a local l10n instance for safety within async function
-    // Check mounted early if needed
-    //this is necessary
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
+
+    // Simple null or empty check for email and password
+    if (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please enter both email and password.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
 
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -200,6 +209,8 @@ class _SignInPageState extends State<SignInPage> {
           ), // Localize
       );
 
+
+
       try {
         final userService =
             UserService(); 
@@ -289,168 +300,156 @@ class _SignInPageState extends State<SignInPage> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            width: MediaQuery.of(context).size.width * 0.9,
-            constraints: const BoxConstraints(maxWidth: 400),
-            decoration: BoxDecoration(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Card(
+              elevation: 6,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
               color: theme.cardColor,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow:
-                  theme.brightness == Brightness.light
-                      ? [
-                        BoxShadow(
-                          color: Theme.of(context).shadowColor.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ]
-                      : null,
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.signIn,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType:
-                        TextInputType.emailAddress, // Correct keyboard type
-                    decoration: InputDecoration(
-                      labelText: l10n.email,
-                      // Input decoration styling will pick up theme.inputDecorationTheme automatically
-                      // border: OutlineInputBorder(), // Removed
-                    ),
-                    validator:
-                        (value) => validateEmail(value, l10n), // Pass l10n
-                  ),
-                  const SizedBox(height: 15),
-                  TextFormField(
-                    controller: _passwordController,
-                    keyboardType:
-                        TextInputType.visiblePassword, // Correct keyboard type
-                    obscureText: !_isPasswordVisible, // Use state variable here
-                    decoration: InputDecoration(
-                      labelText: l10n.password, // Localized
-                      // Input decoration styling will pick up theme.inputDecorationTheme automatically
-                      // border: OutlineInputBorder(), // Removed
-                      suffixIcon: IconButton(
-                        // Add the toggle button
-                        icon: Icon(
-                          // Change icon based on password visibility
-                          _isPasswordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          // Icon color will inherit from theme.inputDecorationTheme.suffixIconColor
-                        ),
-                        onPressed: () {
-                          // Toggle the state variable
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
-                      ),
-                    ),
-                    validator:
-                        (value) => validatePassword(value, l10n), // Pass l10n
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Padding(
+                padding: const EdgeInsets.all(28.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Wrap the "Remember Me" row in Flexible
-                      Flexible(
-                        child: Row(
-                          mainAxisSize:
-                              MainAxisSize.min, // Use min size for inner row
-                          children: [
-                            // Checkbox styling will pick up theme.checkboxTheme automatically
-                            Checkbox(
-                              value: _rememberMe,
-                              onChanged: (value) {
-                                setState(() {
-                                  _rememberMe = value!;
-                                });
-                              },
+                      Text(
+                        l10n.signIn,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          labelText: l10n.email,
+                          prefixIcon: const Icon(Icons.email_outlined),
+                        ),
+                        validator: (value) => validateEmail(value, l10n),
+                      ),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _passwordController,
+                        keyboardType: TextInputType.visiblePassword,
+                        obscureText: !_isPasswordVisible,
+                        decoration: InputDecoration(
+                          labelText: l10n.password,
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isPasswordVisible
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                             ),
-                            // Use theme's text style and Flexible to prevent overflow
-                            Flexible(
-                              child: Text(
-                                // Keep Flexible for text within the inner row
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible;
+                              });
+                            },
+                          ),
+                        ),
+                        validator: (value) => validatePassword(value, l10n),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Checkbox(
+                                value: _rememberMe,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _rememberMe = value!;
+                                  });
+                                },
+                              ),
+                              Text(
                                 l10n.rememberMe,
                                 style: theme.textTheme.bodyMedium,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ), // Localized
-                          ],
-                        ),
-                      ),
-                      // Wrap the "Forgot Password?" TextButton in Flexible
-                      Flexible(
-                        child: TextButton(
-                          onPressed: () {
-                            // Call the new handler function
-                            _handleForgotPassword(l10n);
-                          },
-                          child: Text(
-                            l10n.forgotPassword,
-                            overflow: TextOverflow.ellipsis,
-                          ), // Localized
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                        onPressed: handleLogin,
-                        // Set minimumSize to stretch the button horizontally
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                        ),
-                        child: Text(l10n.signIn), // Localized
-                      ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Use theme's text style and Flexible to prevent overflow
-                      Flexible(
-                        // Keep Flexible for this text
-                        child: Text(
-                          l10n.dontHaveAnAccount,
-                          style: theme.textTheme.bodyMedium,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ), // Localized
-                      TextButton(
-                        onPressed: () {
-                          // Check mounted before navigating
-                          if (!mounted) return;
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SignUpPage(),
+                            ],
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              _handleForgotPassword(l10n);
+                            },
+                            child: Text(
+                              l10n.forgotPassword,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.secondary,
+                              ),
                             ),
-                          );
-                        },
-                        child: Text(
-                          l10n.signUp,
-                          overflow: TextOverflow.ellipsis,
-                        ), // Localized
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 28),
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: handleLogin,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.primary,
+                                  foregroundColor: theme.colorScheme.onPrimary,
+                                  minimumSize: const Size(double.infinity, 50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  l10n.signIn,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: theme.colorScheme.onPrimary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                      const SizedBox(height: 24),
+                      Divider(height: 1, color: theme.dividerColor.withOpacity(0.3)),
+                      const SizedBox(height: 18),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              l10n.dontHaveAnAccount,
+                              style: theme.textTheme.bodyMedium,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              if (!mounted) return;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SignUpPage(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              l10n.signUp,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.secondary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
